@@ -19,7 +19,7 @@ const STORAGE_KEY = 'societypass_db';
 /** Older keys imported once if the stable key is empty (newest first). */
 const LEGACY_KEYS = ['mock_db_v4', 'mock_db_v3', 'mock_db_v2', 'mock_db_v1'];
 /** Bump when adding a migration. */
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 export interface MockUser {
   id: number;
@@ -46,6 +46,8 @@ export interface MockUser {
   duty_shift?: 'day' | 'night';
   /** Per-user UI preference. */
   theme?: 'light' | 'dark';
+  /** The society / building this user currently operates in (sticky). */
+  society_id?: number;
 }
 
 export interface MockVisitor {
@@ -61,6 +63,8 @@ export interface MockVisitor {
   resident_name: string;
   /** Registered phone of the addressed resident (for WhatsApp alerts). */
   resident_phone?: string;
+  society_id?: number;
+  society_name?: string;
   vehicle_number?: string;
   photo?: string | null;
   remarks?: string;
@@ -99,6 +103,7 @@ export interface MockPreApproved {
   days: number;
   flat: string;
   resident_name: string;
+  society_id?: number;
   created_by: number;
   status: 'active' | 'expired' | 'cancelled';
   /** True while a guard has admitted this pass and the visitor is inside. */
@@ -117,9 +122,22 @@ export interface MockQRPass {
   flat: string;
   valid_from: string;
   valid_to: string;
+  society_id?: number;
   created_by: number;
   created_at: string;
   used: boolean;
+}
+
+export interface MockSociety {
+  id: number;
+  /** "Green Valley Residency", "Tower B", … */
+  name: string;
+  type: 'society' | 'building';
+  city: string;
+  address: string;
+  pincode: string;
+  created_by: number;
+  created_at: string;
 }
 
 export interface MockFlat {
@@ -140,21 +158,12 @@ export interface MockDB {
   preApproved: MockPreApproved[];
   qrPasses: MockQRPass[];
   flats: MockFlat[];
-  society: {
-    id: number;
-    name: string;
-    address: string;
-    city: string;
-    total_flats: number;
-    total_residents: number;
-    total_guards: number;
-    towers: string[];
-  };
+  societies: MockSociety[];
 }
 
 function seed(): MockDB {
-  // Only the two operational accounts are seeded. Residents and extra guards
-  // sign up; all visitors, notifications, passes and flats come from real use.
+  // Two operational accounts + one starter society so the demo works out of the
+  // box. New owners sign up as admin and add their own societies / buildings.
   return {
     schema_version: SCHEMA_VERSION,
     seq: 100,
@@ -172,6 +181,7 @@ function seed(): MockDB {
         shift: 'Day Shift',
         on_duty: true,
         duty_shift: 'day',
+        society_id: 1,
       },
       {
         id: 3,
@@ -182,6 +192,7 @@ function seed(): MockDB {
         email: 'admin@societypass.app',
         role: 'society_admin',
         is_phone_verified: true,
+        society_id: 1,
       },
     ],
     visitors: [],
@@ -189,16 +200,18 @@ function seed(): MockDB {
     preApproved: [],
     qrPasses: [],
     flats: [],
-    society: {
-      id: 1,
-      name: 'Green Valley Residency',
-      address: 'Baner Road, Baner',
-      city: 'Pune',
-      total_flats: 0,
-      total_residents: 0,
-      total_guards: 0,
-      towers: [],
-    },
+    societies: [
+      {
+        id: 1,
+        name: 'Green Valley Residency',
+        type: 'society',
+        city: 'Pune',
+        address: 'Baner Road, Baner',
+        pincode: '411045',
+        created_by: 3,
+        created_at: new Date().toISOString(),
+      },
+    ],
   };
 }
 
@@ -220,6 +233,33 @@ const MIGRATIONS: Array<(db: any) => void> = [
     db.notifications = (db.notifications || []).filter((n: any) => Number(n.id) >= 100);
     db.flats = [];
   },
+  // v2 -> v3: single society object becomes a `societies` list; every user and
+  // record is pinned to the first society.
+  (db) => {
+    if (!Array.isArray(db.societies)) {
+      const legacy = db.society;
+      db.societies = legacy
+        ? [
+            {
+              id: Number(legacy.id) || 1,
+              name: legacy.name || 'My Society',
+              type: 'society',
+              city: legacy.city || '',
+              address: legacy.address || '',
+              pincode: String(legacy.pincode || ''),
+              created_by: 0,
+              created_at: new Date().toISOString(),
+            },
+          ]
+        : seed().societies;
+    }
+    delete db.society;
+    const firstId = db.societies[0]?.id;
+    for (const u of db.users) if (u.society_id == null) u.society_id = firstId;
+    for (const v of db.visitors) if (v.society_id == null) v.society_id = firstId;
+    for (const p of db.preApproved) if (p.society_id == null) p.society_id = firstId;
+    for (const q of db.qrPasses) if (q.society_id == null) q.society_id = firstId;
+  },
 ];
 
 /** Bring any stored/legacy payload up to the current schema. Idempotent. */
@@ -233,7 +273,7 @@ function migrate(input: any): MockDB {
   if (!Array.isArray(db.preApproved)) db.preApproved = [];
   if (!Array.isArray(db.qrPasses)) db.qrPasses = [];
   if (!Array.isArray(db.flats)) db.flats = [];
-  if (!db.society) db.society = seed().society;
+  if (!Array.isArray(db.societies) && !db.society) db.societies = seed().societies;
   if (typeof db.seq !== 'number') {
     const maxId = [...db.users, ...db.visitors, ...db.notifications, ...db.preApproved]
       .map((r: any) => Number(r?.id) || 0)

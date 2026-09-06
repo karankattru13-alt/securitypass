@@ -4,6 +4,7 @@ import { TextInput, Button, SegmentedButtons, HelperText, Text } from 'react-nat
 import { useDispatch, useSelector } from 'react-redux';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
+import SocietySelect from '../../components/SocietySelect';
 import { useAppColors, spacing } from '../../theme';
 import { AppDispatch, RootState } from '../../store';
 import { createVisitor } from '../../store/slices/visitorSlice';
@@ -62,6 +63,7 @@ const VisitorRequestScreen: React.FC<any> = ({ navigation }) => {
         onBack={() => navigation.goBack()}
       />
       <View style={styles.body}>
+        <SocietySelect />
         {!user?.flat && (
           <HelperText type="error" visible style={styles.blocker}>
             Add your house / flat number in Profile before pre-clearing visitors.

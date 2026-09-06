@@ -12,6 +12,7 @@ import {
   MockUser,
   MockVisitor,
   MockDB,
+  MockSociety,
 } from './db';
 
 const ok = <T>(data: T) => Promise.resolve({ data, status: 200 });
@@ -62,7 +63,12 @@ class MockAPIClient {
     const db = await getDb();
     let user = db.users.find((u) => u.phone === phone);
     if (!user) {
-      const newRole: MockUser['role'] = role === 'guard' ? 'guard' : 'resident';
+      const newRole: MockUser['role'] =
+        role === 'guard'
+          ? 'guard'
+          : role === 'society_admin' || role === 'admin'
+          ? 'society_admin'
+          : 'resident';
       user = {
         id: nextId(db),
         phone,
@@ -150,6 +156,15 @@ class MockAPIClient {
         : visitorData.resident_name || '',
       resident_phone: targetResident?.phone,
       resident_id: targetResident?.id,
+      society_id: visitorData.society_id
+        ? Number(visitorData.society_id)
+        : me?.society_id ?? targetResident?.society_id,
+      society_name: (() => {
+        const sid = visitorData.society_id
+          ? Number(visitorData.society_id)
+          : me?.society_id ?? targetResident?.society_id;
+        return db.societies.find((s) => s.id === sid)?.name;
+      })(),
       vehicle_number: visitorData.vehicle_number || undefined,
       photo: visitorData.photo || null,
       requested_at: now,
@@ -181,9 +196,14 @@ class MockAPIClient {
   async getResidents() {
     await delay(140);
     const db = await getDb();
+    const me = await currentUser();
     return ok(
       db.users
-        .filter((u) => u.role === 'resident' || u.role === 'staff')
+        .filter(
+          (u) =>
+            (u.role === 'resident' || u.role === 'staff') &&
+            (!me?.society_id || u.society_id === me.society_id)
+        )
         .map((u) => ({
           id: u.id,
           name: `${u.first_name} ${u.last_name}`.trim(),
@@ -192,6 +212,7 @@ class MockAPIClient {
           phone: u.phone,
           email: u.email,
           flat: u.flat || '',
+          society_id: u.society_id,
           role: u.role,
         }))
     );
@@ -210,6 +231,9 @@ class MockAPIClient {
           v.requested_by === me.id ||
           (!!me.flat && v.flat === me.flat)
       );
+    } else if (me && this.isGuard(me) && me.society_id) {
+      // A guard only sees their own society (untagged legacy rows still show).
+      list = list.filter((v) => v.society_id == null || v.society_id === me.society_id);
     }
     if (filters.status) list = list.filter((v) => v.status === filters.status);
     if (filters.approval_status) {
@@ -371,6 +395,7 @@ class MockAPIClient {
       days,
       flat: data.flat || me?.flat || '',
       resident_name: me ? `${me.first_name} ${me.last_name}` : '',
+      society_id: data.society_id ? Number(data.society_id) : me?.society_id,
       created_by: me?.id ?? 0,
       status: 'active' as const,
     };
@@ -406,6 +431,10 @@ class MockAPIClient {
     if (me?.role === 'resident' || me?.role === 'staff') {
       // Residents see only their own, and a pass they removed is gone for them.
       list = list.filter((p) => p.created_by === me.id && p.status !== 'cancelled');
+    } else if (me && this.isGuard(me) && me.society_id) {
+      list = list.filter(
+        (p) => p.society_id == null || p.society_id === me.society_id
+      );
     }
     // Guards & admins keep cancelled passes for the record.
     const rank = (s: string) => (s === 'active' ? 0 : s === 'expired' ? 1 : 2);
@@ -472,6 +501,9 @@ class MockAPIClient {
       flat: p.flat,
       resident_name: p.resident_name,
       resident_id: resident?.id,
+      society_id: p.society_id ?? me?.society_id,
+      society_name: db.societies.find((s) => s.id === (p.society_id ?? me?.society_id))
+        ?.name,
       photo: null,
       requested_at: now,
       entry_time: now,
@@ -502,6 +534,7 @@ class MockAPIClient {
       valid_from: data.valid_from || new Date().toISOString(),
       valid_to:
         data.valid_to || new Date(Date.now() + 6 * 3600_000).toISOString(),
+      society_id: data.society_id ? Number(data.society_id) : me?.society_id,
       created_by: me?.id ?? 0,
       created_at: new Date().toISOString(),
       used: false,
@@ -563,7 +596,8 @@ class MockAPIClient {
   async adminCreateUser(data: any) {
     await delay();
     const db = await getDb();
-    this.assertAdmin(await currentUser());
+    const admin = await currentUser();
+    this.assertAdmin(admin);
     const phone = String(data.phone || '').replace(/\D/g, '');
     if (phone.length !== 10) throw new ApiError(400, 'Enter a 10-digit phone number.');
     if (db.users.some((u) => u.phone === phone)) {
@@ -584,6 +618,7 @@ class MockAPIClient {
       email: data.email || `${phone}@societypass.app`,
       role,
       is_phone_verified: true,
+      society_id: data.society_id ? Number(data.society_id) : admin?.society_id,
       ...(data.flat ? { flat: String(data.flat).trim().toUpperCase() } : {}),
       ...(role === 'guard'
         ? {
@@ -648,7 +683,8 @@ class MockAPIClient {
   async adminCreateVisitor(data: any) {
     await delay();
     const db = await getDb();
-    this.assertAdmin(await currentUser());
+    const admin = await currentUser();
+    this.assertAdmin(admin);
     const now = new Date().toISOString();
     const resident =
       (data.resident_id && db.users.find((u) => u.id === Number(data.resident_id))) ||
@@ -673,6 +709,16 @@ class MockAPIClient {
         : data.resident_name || '',
       resident_phone: resident?.phone,
       resident_id: resident?.id,
+      society_id: data.society_id
+        ? Number(data.society_id)
+        : resident?.society_id ?? admin?.society_id,
+      society_name: db.societies.find(
+        (s) =>
+          s.id ===
+          (data.society_id
+            ? Number(data.society_id)
+            : resident?.society_id ?? admin?.society_id)
+      )?.name,
       vehicle_number: data.vehicle_number || undefined,
       photo: null,
       requested_at: data.requested_at || now,
@@ -715,11 +761,20 @@ class MockAPIClient {
     return ok({ detail: 'Visitor deleted', id: Number(id) });
   }
 
-  // ---- Society / flats ---------------------------------------
-  /** Flats are derived from registered residents who have set a house number. */
-  private flatList(db: MockDB) {
+  // ---- Societies / buildings -------------------------------
+  private isResident = (u: MockUser) => u.role === 'resident' || u.role === 'staff';
+  private isGuard = (u: MockUser) =>
+    u.role === 'guard' || u.role === 'security_supervisor';
+
+  /** Flats derived from residents with a house number, optionally one society. */
+  private flatList(db: MockDB, societyId?: number) {
     return db.users
-      .filter((u) => (u.role === 'resident' || u.role === 'staff') && u.flat)
+      .filter(
+        (u) =>
+          this.isResident(u) &&
+          u.flat &&
+          (societyId == null || u.society_id === societyId)
+      )
       .map((u) => ({
         id: u.id,
         number: u.flat as string,
@@ -731,40 +786,63 @@ class MockAPIClient {
       .sort((a, b) => a.number.localeCompare(b.number));
   }
 
-  private societyInfo(db: MockDB) {
-    const flats = this.flatList(db);
-    const towers = [...new Set(flats.map((f) => f.tower))].filter((t) => t && t !== '—').sort();
+  private societyCard(db: MockDB, s: MockSociety) {
+    const flats = this.flatList(db, s.id);
     return {
-      ...db.society,
+      ...s,
       total_flats: flats.length,
       total_residents: db.users.filter(
-        (u) => u.role === 'resident' || u.role === 'staff'
+        (u) => this.isResident(u) && u.society_id === s.id
       ).length,
       total_guards: db.users.filter(
-        (u) => u.role === 'guard' || u.role === 'security_supervisor'
+        (u) => this.isGuard(u) && u.society_id === s.id
       ).length,
-      towers,
+      towers: [...new Set(flats.map((f) => f.tower))]
+        .filter((t) => t && t !== '—')
+        .sort(),
     };
   }
 
-  async getSociety(_societyId: number) {
-    await delay(140);
-    const db = await getDb();
-    return ok(this.societyInfo(db));
-  }
-
-  async getSocietyFlats(_societyId: number) {
-    await delay(160);
-    const db = await getDb();
-    return ok(this.flatList(db));
-  }
-
-  async searchFlat(_societyId: number, query: string) {
+  /** Guards & residents get every society (to pick one); an admin gets only the
+   *  societies they created. */
+  async getSocieties() {
     await delay(120);
     const db = await getDb();
+    const me = await currentUser();
+    const isAdmin = me?.role === 'society_admin' || me?.role === 'super_admin';
+    return ok(
+      db.societies
+        .filter((s) => !isAdmin || s.created_by === me!.id)
+        .map((s) => this.societyCard(db, s))
+    );
+  }
+
+  async getSociety(societyId: number) {
+    await delay(120);
+    const db = await getDb();
+    const me = await currentUser();
+    const id = Number(societyId) || me?.society_id || db.societies[0]?.id;
+    const s = db.societies.find((x) => x.id === id) || db.societies[0];
+    if (!s) throw new ApiError(404, 'No society found.');
+    return ok(this.societyCard(db, s));
+  }
+
+  async getSocietyFlats(societyId: number) {
+    await delay(140);
+    const db = await getDb();
+    const me = await currentUser();
+    const id = Number(societyId) || me?.society_id || undefined;
+    return ok(this.flatList(db, id));
+  }
+
+  async searchFlat(societyId: number, query: string) {
+    await delay(120);
+    const db = await getDb();
+    const me = await currentUser();
+    const id = Number(societyId) || me?.society_id || undefined;
     const q = (query || '').toLowerCase();
     return ok(
-      this.flatList(db).filter(
+      this.flatList(db, id).filter(
         (f) =>
           f.number.toLowerCase().includes(q) ||
           f.resident_name.toLowerCase().includes(q)
@@ -772,20 +850,94 @@ class MockAPIClient {
     );
   }
 
+  /** Any signed-in user picks which society/building they operate in (sticky). */
+  async setMySociety(societyId: number | null) {
+    await delay(120);
+    const db = await getDb();
+    const me = await currentUser();
+    if (!me) throw new ApiError(401, 'Not authenticated');
+    if (societyId != null && !db.societies.find((s) => s.id === Number(societyId))) {
+      throw new ApiError(404, 'Society not found.');
+    }
+    const idx = db.users.findIndex((u) => u.id === me.id);
+    db.users[idx].society_id = societyId == null ? undefined : Number(societyId);
+    await persist();
+    return ok(publicUser(db.users[idx]));
+  }
+
+  async adminCreateSociety(data: any) {
+    await delay();
+    const db = await getDb();
+    const me = await currentUser();
+    this.assertAdmin(me);
+    const s: MockSociety = {
+      id: nextId(db),
+      name: String(data.name || '').trim() || 'Untitled',
+      type: data.type === 'building' ? 'building' : 'society',
+      city: String(data.city || '').trim(),
+      address: String(data.address || '').trim(),
+      pincode: String(data.pincode || '').trim(),
+      created_by: me!.id,
+      created_at: new Date().toISOString(),
+    };
+    db.societies.push(s);
+    // Stick the first society they create to their own account.
+    const meIdx = db.users.findIndex((u) => u.id === me!.id);
+    if (db.users[meIdx].society_id == null) db.users[meIdx].society_id = s.id;
+    await persist();
+    return ok(this.societyCard(db, s));
+  }
+
+  async adminUpdateSociety(id: number, patch: any) {
+    await delay();
+    const db = await getDb();
+    this.assertAdmin(await currentUser());
+    const idx = db.societies.findIndex((s) => s.id === Number(id));
+    if (idx === -1) throw new ApiError(404, 'Society not found.');
+    const next = { ...patch };
+    delete next.id;
+    if (next.type) next.type = next.type === 'building' ? 'building' : 'society';
+    db.societies[idx] = { ...db.societies[idx], ...next };
+    await persist();
+    return ok(this.societyCard(db, db.societies[idx]));
+  }
+
+  async adminDeleteSociety(id: number) {
+    await delay();
+    const db = await getDb();
+    this.assertAdmin(await currentUser());
+    const sid = Number(id);
+    const idx = db.societies.findIndex((s) => s.id === sid);
+    if (idx === -1) throw new ApiError(404, 'Society not found.');
+    const members = db.users.filter((u) => u.society_id === sid).length;
+    if (members > 0) {
+      throw new ApiError(
+        400,
+        `Reassign or remove its ${members} member(s) before deleting this society.`
+      );
+    }
+    db.societies.splice(idx, 1);
+    await persist();
+    return ok({ detail: 'Society deleted', id: sid });
+  }
+
   // ---- Guard -------------------------------------------------
   async getGuardStats() {
     await delay(120);
     const db = await getDb();
+    const me = await currentUser();
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
-    const todayVisitors = db.visitors.filter(
-      (v) => new Date(v.requested_at) >= startOfDay
-    ).length;
-    const currentlyInside = db.visitors.filter((v) => v.status === 'entered').length;
-    const pendingApprovals = db.visitors.filter(
-      (v) => v.status === 'waiting' && v.approval_status === 'pending'
-    ).length;
-    return ok({ todayVisitors, currentlyInside, pendingApprovals });
+    const inScope = (v: MockVisitor) =>
+      !me?.society_id || v.society_id == null || v.society_id === me.society_id;
+    const list = db.visitors.filter(inScope);
+    return ok({
+      todayVisitors: list.filter((v) => new Date(v.requested_at) >= startOfDay).length,
+      currentlyInside: list.filter((v) => v.status === 'entered').length,
+      pendingApprovals: list.filter(
+        (v) => v.status === 'waiting' && v.approval_status === 'pending'
+      ).length,
+    });
   }
 
   async recordGuardCheckIn() {
@@ -820,22 +972,29 @@ class MockAPIClient {
   async getGuards() {
     await delay(140);
     const db = await getDb();
-    return ok(
-      db.users
-        .filter((u) => u.role === 'guard' || u.role === 'security_supervisor')
-        .map((u) => this.guardCard(u))
-    );
-  }
-
-  /** Guards currently on duty — visible to residents and admins. */
-  async getOnDutyGuards() {
-    await delay(120);
-    const db = await getDb();
+    const me = await currentUser();
     return ok(
       db.users
         .filter(
           (u) =>
-            (u.role === 'guard' || u.role === 'security_supervisor') && u.on_duty
+            this.isGuard(u) && (!me?.society_id || u.society_id === me.society_id)
+        )
+        .map((u) => ({ ...this.guardCard(u), society_id: u.society_id }))
+    );
+  }
+
+  /** Guards currently on duty — visible to residents and admins in the society. */
+  async getOnDutyGuards() {
+    await delay(120);
+    const db = await getDb();
+    const me = await currentUser();
+    return ok(
+      db.users
+        .filter(
+          (u) =>
+            this.isGuard(u) &&
+            u.on_duty &&
+            (!me?.society_id || u.society_id === me.society_id)
         )
         .map((u) => this.guardCard(u))
     );

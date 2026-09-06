@@ -25,10 +25,17 @@ guards, visitors, pre-approved passes, flats) comes from real use.
 | Guard | `9000000001` | `password` | Ravi Kumar · Main Gate   |
 | Admin | `9000000003` | `password` | Anil Mehta               |
 
-**Residents and additional guards sign up** from the login screen (OTP flow, demo
-code **`123456`**). A new resident sets their house number in **Profile → House /
-Flat number**; only then do they appear in the admin residents list, the guard's
-"who is this visitor for?" picker, and the society flats list.
+**Everyone else signs up** from the login screen (OTP flow, demo code
+**`123456`**) — Resident, Guard, or **Owner / Admin**. A new owner creates their
+account, then adds one or more **societies / buildings** (name, type, city,
+address, pincode) under the admin **Places** tab.
+
+Every guard and resident picks their **society / building** — in Profile, or from
+the selector shown on the create screens. The choice is **sticky** (saved to the
+account) and scopes what they see: a guard only sees their society's gate
+activity, residents and pre-approved passes. An admin manages only the societies
+they created. A new resident also sets their house number in **Profile → House /
+Flat number** before they show up in directories and the guard's visitor picker.
 
 ## What works
 

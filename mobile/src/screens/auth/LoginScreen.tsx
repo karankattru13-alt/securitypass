@@ -101,6 +101,14 @@ const LoginScreen: React.FC<any> = ({ navigation }) => {
           >
             Guard sign-up
           </Button>
+          <Button
+            mode="text"
+            compact
+            textColor={c.admin}
+            onPress={() => navigation.navigate('Register', { role: 'admin' })}
+          >
+            Owner / Admin sign-up
+          </Button>
         </View>
 
         <Card style={styles.demoCard}>

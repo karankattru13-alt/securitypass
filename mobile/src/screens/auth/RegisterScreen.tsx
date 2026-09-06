@@ -15,8 +15,13 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
   const styles = React.useMemo(() => makeStyles(c), [c]);
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error } = useSelector((s: RootState) => s.auth);
-  const role: 'resident' | 'guard' = route.params?.role === 'guard' ? 'guard' : 'resident';
+  const rp = route.params?.role;
+  const role: 'resident' | 'guard' | 'society_admin' =
+    rp === 'guard' ? 'guard' : rp === 'admin' || rp === 'society_admin' ? 'society_admin' : 'resident';
   const isGuard = role === 'guard';
+  const isAdmin = role === 'society_admin';
+  const accent = isGuard ? c.guard : isAdmin ? c.admin : c.primary;
+  const roleWord = isGuard ? 'Guard' : isAdmin ? 'Owner / Admin' : 'Resident';
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -48,9 +53,15 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
   return (
     <Screen padded={false}>
       <AppHeader
-        title={isGuard ? 'Create guard account' : 'Create account'}
-        subtitle={isGuard ? 'Security staff sign-up' : 'Resident sign-up'}
-        color={isGuard ? c.guard : c.primary}
+        title={`Create ${roleWord.toLowerCase()} account`}
+        subtitle={
+          isAdmin
+            ? 'Society / building owner sign-up'
+            : isGuard
+            ? 'Security staff sign-up'
+            : 'Resident sign-up'
+        }
+        color={accent}
         onBack={() => navigation.goBack()}
         hideLogout
       />
@@ -105,7 +116,7 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
             onPress={sendCode}
             loading={loading}
             disabled={loading || !canSend}
-            buttonColor={isGuard ? c.guard : c.primary}
+            buttonColor={accent}
             style={styles.button}
           >
             Send OTP
@@ -116,7 +127,7 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
             onPress={verify}
             loading={loading}
             disabled={loading || code.length < 6}
-            buttonColor={isGuard ? c.guard : c.primary}
+            buttonColor={accent}
             style={styles.button}
           >
             {isGuard ? 'Verify & Create Guard Account' : 'Verify & Create Account'}

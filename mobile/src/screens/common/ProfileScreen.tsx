@@ -13,6 +13,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
+import SocietySelect from '../../components/SocietySelect';
 import { useAppColors, spacing, roleColor, prettyStatus } from '../../theme';
 import { initials } from '../../utils/format';
 import { AppDispatch, RootState } from '../../store';
@@ -69,6 +70,16 @@ const ProfileScreen: React.FC<any> = ({ navigation }) => {
                 {user.flat ? ` • ${user.flat}` : ''}
               </Text>
             </View>
+          </Card.Content>
+        </Card>
+
+        <Card style={styles.societyCard}>
+          <Card.Content>
+            <SocietySelect />
+            <Text style={styles.societyHint}>
+              Your requests, gate view and directory are tied to this place. It
+              stays selected until you change it.
+            </Text>
           </Card.Content>
         </Card>
 
@@ -152,6 +163,8 @@ const makeStyles = (c: Pal) =>
   StyleSheet.create({
   body: { padding: spacing(4) },
   card: { marginBottom: spacing(4), backgroundColor: c.card },
+  societyCard: { marginBottom: spacing(4), backgroundColor: c.card },
+  societyHint: { fontSize: 12, color: c.muted, marginTop: spacing(1) },
   userRow: { flexDirection: 'row', alignItems: 'center' },
   userInfo: { marginLeft: spacing(4), flex: 1 },
   name: { fontSize: 18, fontWeight: '800', color: c.text },

@@ -12,6 +12,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
+import SocietySelect from '../../components/SocietySelect';
 import { useAppColors, spacing, radius } from '../../theme';
 import { AppDispatch, RootState } from '../../store';
 import { createVisitor } from '../../store/slices/visitorSlice';
@@ -59,12 +60,14 @@ const NewVisitorScreen: React.FC<any> = ({ navigation, route }) => {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    setLoadingResidents(true);
+    setSelected(null);
     api
       .getResidents()
       .then((r) => setResidents(r.data))
       .catch(() => setResidents([]))
       .finally(() => setLoadingResidents(false));
-  }, []);
+  }, [me?.society_id]);
 
   const matches = useMemo(() => {
     const q = residentQuery.trim().toLowerCase();
@@ -80,6 +83,10 @@ const NewVisitorScreen: React.FC<any> = ({ navigation, route }) => {
   }, [residents, residentQuery]);
 
   const submit = async () => {
+    if (!me?.society_id) {
+      setError('Select your society / building first.');
+      return;
+    }
     if (!selected) {
       setError('Select the resident this visitor is here to meet.');
       return;
@@ -154,6 +161,7 @@ const NewVisitorScreen: React.FC<any> = ({ navigation, route }) => {
         onBack={() => navigation.goBack()}
       />
       <View style={styles.body}>
+        <SocietySelect />
         <Text style={styles.label}>Visiting which resident? *</Text>
         {selected ? (
           <Card style={styles.selectedCard}>

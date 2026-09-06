@@ -132,7 +132,7 @@ const AdminNavigator = () => {
       component={AdminDashboardScreen}
       options={{ title: 'Dashboard' }}
     />
-    <Tab.Screen name="AdminSociety" component={AdminSocietyScreen} options={{ title: 'Society' }} />
+    <Tab.Screen name="AdminSociety" component={AdminSocietyScreen} options={{ title: 'Places' }} />
     <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
   </Tab.Navigator>
   );

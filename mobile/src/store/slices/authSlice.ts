@@ -17,6 +17,7 @@ export interface User {
   on_duty?: boolean;
   duty_shift?: 'day' | 'night';
   theme?: 'light' | 'dark';
+  society_id?: number;
 }
 
 interface AuthState {
@@ -106,6 +107,18 @@ export const getMe = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await api.getMe();
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(api.getErrorMessage(error));
+    }
+  }
+);
+
+export const setSociety = createAsyncThunk(
+  'auth/setSociety',
+  async (societyId: number | null, { rejectWithValue }) => {
+    try {
+      const response = await api.setMySociety(societyId);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(api.getErrorMessage(error));
@@ -218,6 +231,14 @@ const authSlice = createSlice({
       })
       .addCase(getMe.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // Society selection
+      .addCase(setSociety.fulfilled, (state, action) => {
+        if (state.user) state.user.society_id = action.payload.society_id;
+      })
+      .addCase(setSociety.rejected, (state, action) => {
         state.error = action.payload as string;
       })
 

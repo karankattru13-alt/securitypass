@@ -104,6 +104,27 @@ class APIClient {
     return this.client.get('/users/residents/');
   }
 
+  // Societies / buildings
+  async getSocieties() {
+    return this.client.get('/societies/');
+  }
+
+  async setMySociety(societyId: number | null) {
+    return this.client.post('/users/society/', { society_id: societyId });
+  }
+
+  async adminCreateSociety(data: any) {
+    return this.client.post('/admin/societies/', data);
+  }
+
+  async adminUpdateSociety(id: number, patch: any) {
+    return this.client.patch(`/admin/societies/${id}/`, patch);
+  }
+
+  async adminDeleteSociety(id: number) {
+    return this.client.delete(`/admin/societies/${id}/`);
+  }
+
   // Visitor endpoints
   async createVisitor(visitorData: any) {
     return this.client.post('/visitors/', visitorData);
