@@ -71,12 +71,19 @@ class APIClient {
     return this.client.post('/users/auth/request_otp/', { phone });
   }
 
-  async verifyOTP(phone: string, code: string, firstName?: string, lastName?: string) {
+  async verifyOTP(
+    phone: string,
+    code: string,
+    firstName?: string,
+    lastName?: string,
+    role?: string
+  ) {
     return this.client.post('/users/auth/verify_otp/', {
       phone,
       code,
       first_name: firstName,
       last_name: lastName,
+      role,
     });
   }
 

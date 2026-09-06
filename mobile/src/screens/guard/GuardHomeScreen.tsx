@@ -5,7 +5,9 @@ import { Card, Button, Badge, ActivityIndicator } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import api from '../../services/api';
-import { RootState } from '../../store';
+import { RootState, AppDispatch } from '../../store';
+import { logout } from '../../store/slices/authSlice';
+import { confirmSignOut } from '../../components/AppHeader';
 
 interface PendingApproval {
   id: number;
@@ -23,7 +25,7 @@ interface CurrentVisitor {
 }
 
 const GuardHomeScreen: React.FC<any> = ({ navigation }) => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
   const [loading, setLoading] = useState(false);
   const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([]);
@@ -101,11 +103,21 @@ const GuardHomeScreen: React.FC<any> = ({ navigation }) => {
     <ScrollView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <View>
+        <View style={{ flex: 1 }}>
           <Text style={styles.title}>SocietyPass Guard</Text>
-          <Text style={styles.subtitle}>Main Gate • Morning Shift</Text>
+          <Text style={styles.subtitle}>
+            {user?.gate || 'Main Gate'} • {user?.shift || 'Morning Shift'}
+          </Text>
         </View>
-        <Icon name="security" size={32} color="#2196F3" />
+        <Icon name="security" size={28} color="#fff" />
+        <TouchableOpacity
+          onPress={() => confirmSignOut(() => dispatch(logout()))}
+          style={styles.signOutBtn}
+          hitSlop={12}
+          accessibilityLabel="Sign out"
+        >
+          <Icon name="logout" size={22} color="#fff" />
+        </TouchableOpacity>
       </View>
 
       {/* Status Cards */}
@@ -278,6 +290,12 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     color: '#e3f2fd',
+  },
+  signOutBtn: {
+    marginLeft: 12,
+    paddingLeft: 12,
+    borderLeftWidth: StyleSheet.hairlineWidth,
+    borderLeftColor: 'rgba(255,255,255,0.4)',
   },
   statsContainer: {
     flexDirection: 'row',

@@ -8,9 +8,12 @@ import { colors, spacing } from '../../theme';
 import { AppDispatch, RootState } from '../../store';
 import { requestOTP, verifyOTP, clearError } from '../../store/slices/authSlice';
 
-const RegisterScreen: React.FC<any> = ({ navigation }) => {
+const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error } = useSelector((s: RootState) => s.auth);
+  const role: 'resident' | 'guard' = route.params?.role === 'guard' ? 'guard' : 'resident';
+  const isGuard = role === 'guard';
+
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
@@ -33,6 +36,7 @@ const RegisterScreen: React.FC<any> = ({ navigation }) => {
         code: code.trim(),
         firstName: firstName.trim(),
         lastName: lastName.trim(),
+        role,
       })
     );
   };
@@ -40,9 +44,11 @@ const RegisterScreen: React.FC<any> = ({ navigation }) => {
   return (
     <Screen padded={false}>
       <AppHeader
-        title="Create account"
-        subtitle="Resident sign-up"
+        title={isGuard ? 'Create guard account' : 'Create account'}
+        subtitle={isGuard ? 'Security staff sign-up' : 'Resident sign-up'}
+        color={isGuard ? colors.guard : colors.primary}
         onBack={() => navigation.goBack()}
+        hideLogout
       />
       <View style={styles.body}>
         <TextInput
@@ -95,6 +101,7 @@ const RegisterScreen: React.FC<any> = ({ navigation }) => {
             onPress={sendCode}
             loading={loading}
             disabled={loading || !canSend}
+            buttonColor={isGuard ? colors.guard : colors.primary}
             style={styles.button}
           >
             Send OTP
@@ -105,9 +112,10 @@ const RegisterScreen: React.FC<any> = ({ navigation }) => {
             onPress={verify}
             loading={loading}
             disabled={loading || code.length < 6}
+            buttonColor={isGuard ? colors.guard : colors.primary}
             style={styles.button}
           >
-            Verify & Create Account
+            {isGuard ? 'Verify & Create Guard Account' : 'Verify & Create Account'}
           </Button>
         )}
       </View>

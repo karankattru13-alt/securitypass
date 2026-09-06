@@ -82,9 +82,23 @@ const LoginScreen: React.FC<any> = ({ navigation }) => {
         >
           Sign in with OTP
         </Button>
-        <Button mode="text" onPress={() => navigation.navigate('Register')}>
-          Create a resident account
-        </Button>
+        <View style={styles.signupRow}>
+          <Button
+            mode="text"
+            compact
+            onPress={() => navigation.navigate('Register', { role: 'resident' })}
+          >
+            Resident sign-up
+          </Button>
+          <Button
+            mode="text"
+            compact
+            textColor={colors.guard}
+            onPress={() => navigation.navigate('Register', { role: 'guard' })}
+          >
+            Guard sign-up
+          </Button>
+        </View>
 
         <Card style={styles.demoCard}>
           <Card.Content>
@@ -116,6 +130,7 @@ const styles = StyleSheet.create({
   input: { marginBottom: spacing(3), backgroundColor: colors.card },
   button: { marginTop: spacing(2), paddingVertical: spacing(1) },
   linkBtn: { marginTop: spacing(2) },
+  signupRow: { flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap' },
   demoCard: { marginTop: spacing(6), backgroundColor: '#EEF2FF' },
   demoTitle: { fontWeight: '700', color: colors.text, marginBottom: spacing(2) },
   demoRow: { color: colors.primary, paddingVertical: 3, fontWeight: '600' },

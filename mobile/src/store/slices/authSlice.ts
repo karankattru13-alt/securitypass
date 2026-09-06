@@ -51,7 +51,13 @@ export const requestOTP = createAsyncThunk(
 export const verifyOTP = createAsyncThunk(
   'auth/verifyOTP',
   async (
-    data: { phone: string; code: string; firstName?: string; lastName?: string },
+    data: {
+      phone: string;
+      code: string;
+      firstName?: string;
+      lastName?: string;
+      role?: string;
+    },
     { rejectWithValue }
   ) => {
     try {
@@ -59,7 +65,8 @@ export const verifyOTP = createAsyncThunk(
         data.phone,
         data.code,
         data.firstName,
-        data.lastName
+        data.lastName,
+        data.role
       );
 
       await AsyncStorage.setItem('access_token', response.data.access);

@@ -33,6 +33,7 @@ const OTPScreen: React.FC<any> = ({ navigation, route }) => {
         title="Sign in with OTP"
         subtitle={sent ? 'Enter the 6-digit code' : 'We will send a one-time code'}
         onBack={() => navigation.goBack()}
+        hideLogout
       />
       <View style={styles.body}>
         <MaterialCommunityIcons

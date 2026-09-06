@@ -49,21 +49,29 @@ class MockAPIClient {
     return ok({ detail: 'OTP sent', demo_code: '123456' });
   }
 
-  async verifyOTP(phone: string, code: string, firstName?: string, lastName?: string) {
+  async verifyOTP(
+    phone: string,
+    code: string,
+    firstName?: string,
+    lastName?: string,
+    role?: string
+  ) {
     await delay();
     if (code !== '123456') throw new ApiError(400, 'Invalid OTP. Use 123456 in demo mode.');
     const db = await getDb();
     let user = db.users.find((u) => u.phone === phone);
     if (!user) {
+      const newRole: MockUser['role'] = role === 'guard' ? 'guard' : 'resident';
       user = {
         id: nextId(db),
         phone,
         password: 'password',
         first_name: firstName || 'New',
-        last_name: lastName || 'Resident',
+        last_name: lastName || (newRole === 'guard' ? 'Guard' : 'Resident'),
         email: `${phone}@demo.in`,
-        role: 'resident',
+        role: newRole,
         is_phone_verified: true,
+        ...(newRole === 'guard' ? { gate: 'Main Gate', shift: 'Morning Shift' } : {}),
       };
       db.users.push(user);
       await persist();
