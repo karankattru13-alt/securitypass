@@ -15,20 +15,16 @@ npm run web        # open http://localhost:19006  (also: npm run android / npm r
 > Requires Node 16.13+ (Node 18+ recommended). If `npm install` complains about
 > peer versions on newer setups, run `npx expo install --fix`.
 
-## Starting accounts
+## Getting started
 
-Only two operational accounts are seeded — everything else (residents, extra
-guards, visitors, pre-approved passes, flats) comes from real use.
+**Nothing is seeded** — the store starts empty. Everyone signs up from the login
+screen (OTP flow, code **`123456`** in mock mode) as **Owner / Admin**, **Guard**,
+or **Resident**.
 
-| Role  | Phone        | Password   | Notes                    |
-|-------|--------------|------------|--------------------------|
-| Guard | `9000000001` | `password` | Ravi Kumar · Main Gate   |
-| Admin | `9000000003` | `password` | Anil Mehta               |
-
-**Everyone else signs up** from the login screen (OTP flow, demo code
-**`123456`**) — Resident, Guard, or **Owner / Admin**. A new owner creates their
-account, then adds one or more **societies / buildings** (name, type, city,
-address, pincode) under the admin **Places** tab.
+1. The **owner signs up as Admin**, then adds one or more **societies /
+   buildings** (name, type, city, address, pincode) under the admin **Places**
+   tab.
+2. **Guards and residents sign up**, then pick their society / building.
 
 Every guard and resident picks their **society / building** — in Profile, or from
 the selector shown on the create screens. The choice is **sticky** (saved to the

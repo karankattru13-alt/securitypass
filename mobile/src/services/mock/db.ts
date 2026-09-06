@@ -19,7 +19,7 @@ const STORAGE_KEY = 'societypass_db';
 /** Older keys imported once if the stable key is empty (newest first). */
 const LEGACY_KEYS = ['mock_db_v4', 'mock_db_v3', 'mock_db_v2', 'mock_db_v1'];
 /** Bump when adding a migration. */
-const SCHEMA_VERSION = 3;
+const SCHEMA_VERSION = 4;
 
 export interface MockUser {
   id: number;
@@ -162,56 +162,18 @@ export interface MockDB {
 }
 
 function seed(): MockDB {
-  // Two operational accounts + one starter society so the demo works out of the
-  // box. New owners sign up as admin and add their own societies / buildings.
+  // Nothing is seeded. The first owner signs up as admin and creates their
+  // society / building; guards and residents sign up after that.
   return {
     schema_version: SCHEMA_VERSION,
     seq: 100,
-    users: [
-      {
-        id: 1,
-        phone: '9000000001',
-        password: 'password',
-        first_name: 'Ravi',
-        last_name: 'Kumar',
-        email: 'guard@societypass.app',
-        role: 'guard',
-        is_phone_verified: true,
-        gate: 'Main Gate',
-        shift: 'Day Shift',
-        on_duty: true,
-        duty_shift: 'day',
-        society_id: 1,
-      },
-      {
-        id: 3,
-        phone: '9000000003',
-        password: 'password',
-        first_name: 'Anil',
-        last_name: 'Mehta',
-        email: 'admin@societypass.app',
-        role: 'society_admin',
-        is_phone_verified: true,
-        society_id: 1,
-      },
-    ],
+    users: [],
     visitors: [],
     notifications: [],
     preApproved: [],
     qrPasses: [],
     flats: [],
-    societies: [
-      {
-        id: 1,
-        name: 'Green Valley Residency',
-        type: 'society',
-        city: 'Pune',
-        address: 'Baner Road, Baner',
-        pincode: '411045',
-        created_by: 3,
-        created_at: new Date().toISOString(),
-      },
-    ],
+    societies: [],
   };
 }
 
@@ -259,6 +221,18 @@ const MIGRATIONS: Array<(db: any) => void> = [
     for (const v of db.visitors) if (v.society_id == null) v.society_id = firstId;
     for (const p of db.preApproved) if (p.society_id == null) p.society_id = firstId;
     for (const q of db.qrPasses) if (q.society_id == null) q.society_id = firstId;
+  },
+  // v3 -> v4: full wipe. Everyone signs up fresh, so clear all seeded/demo and
+  // previously-created data back to an empty store.
+  (db) => {
+    db.users = [];
+    db.visitors = [];
+    db.notifications = [];
+    db.preApproved = [];
+    db.qrPasses = [];
+    db.flats = [];
+    db.societies = [];
+    db.seq = 100;
   },
 ];
 

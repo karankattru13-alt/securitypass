@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
-import { TextInput, Button, HelperText, Card } from 'react-native-paper';
+import { TextInput, Button, HelperText } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import Screen from '../../components/Screen';
@@ -10,18 +10,13 @@ import { login, clearError } from '../../store/slices/authSlice';
 
 type Pal = ReturnType<typeof useAppColors>;
 
-const DEMO = [
-  { label: 'Guard', phone: '9000000001' },
-  { label: 'Admin', phone: '9000000003' },
-];
-
 const LoginScreen: React.FC<any> = ({ navigation }) => {
   const c = useAppColors();
   const styles = React.useMemo(() => makeStyles(c), [c]);
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error } = useSelector((s: RootState) => s.auth);
-  const [phone, setPhone] = useState('9000000001');
-  const [password, setPassword] = useState('password');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
 
   const submit = () => {
@@ -85,6 +80,7 @@ const LoginScreen: React.FC<any> = ({ navigation }) => {
         >
           Sign in with OTP
         </Button>
+
         <View style={styles.signupRow}>
           <Button
             mode="text"
@@ -111,26 +107,10 @@ const LoginScreen: React.FC<any> = ({ navigation }) => {
           </Button>
         </View>
 
-        <Card style={styles.demoCard}>
-          <Card.Content>
-            <Text style={styles.demoTitle}>Starting accounts · password "password"</Text>
-            {DEMO.map((d) => (
-              <Text
-                key={d.phone}
-                style={styles.demoRow}
-                onPress={() => {
-                  setPhone(d.phone);
-                  setPassword('password');
-                }}
-              >
-                {d.label}: {d.phone}
-              </Text>
-            ))}
-            <Text style={styles.demoHint}>
-              Residents &amp; other guards sign up. OTP code is always 123456.
-            </Text>
-          </Card.Content>
-        </Card>
+        <Text style={styles.newHint}>
+          New here? An owner signs up first and adds their society or building,
+          then guards and residents sign up.
+        </Text>
       </KeyboardAvoidingView>
     </Screen>
   );
@@ -138,17 +118,20 @@ const LoginScreen: React.FC<any> = ({ navigation }) => {
 
 const makeStyles = (c: Pal) =>
   StyleSheet.create({
-  brand: { alignItems: 'center', marginTop: spacing(8), marginBottom: spacing(6) },
-  title: { fontSize: 26, fontWeight: '800', color: c.text, marginTop: spacing(2) },
-  subtitle: { fontSize: 14, color: c.muted, marginTop: 2 },
-  input: { marginBottom: spacing(3), backgroundColor: c.card },
-  button: { marginTop: spacing(2), paddingVertical: spacing(1) },
-  linkBtn: { marginTop: spacing(2) },
-  signupRow: { flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap' },
-  demoCard: { marginTop: spacing(6), backgroundColor: c.cardAlt },
-  demoTitle: { fontWeight: '700', color: c.text, marginBottom: spacing(2) },
-  demoRow: { color: c.primary, paddingVertical: 3, fontWeight: '600' },
-  demoHint: { color: c.muted, marginTop: spacing(2), fontSize: 12 },
-});
+    brand: { alignItems: 'center', marginTop: spacing(8), marginBottom: spacing(6) },
+    title: { fontSize: 26, fontWeight: '800', color: c.text, marginTop: spacing(2) },
+    subtitle: { fontSize: 14, color: c.muted, marginTop: 2 },
+    input: { marginBottom: spacing(3), backgroundColor: c.card },
+    button: { marginTop: spacing(2), paddingVertical: spacing(1) },
+    linkBtn: { marginTop: spacing(2) },
+    signupRow: { flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap' },
+    newHint: {
+      color: c.muted,
+      fontSize: 12,
+      textAlign: 'center',
+      marginTop: spacing(6),
+      paddingHorizontal: spacing(4),
+    },
+  });
 
 export default LoginScreen;
