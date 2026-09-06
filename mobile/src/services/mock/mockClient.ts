@@ -388,8 +388,9 @@ class MockAPIClient {
     return ok(entry);
   }
 
-  /** Recompute active/expired against the clock. */
-  private withLiveStatus<T extends { valid_to: string }>(p: T) {
+  /** Recompute active/expired against the clock (leaves a cancelled pass alone). */
+  private withLiveStatus<T extends { valid_to: string; status?: string }>(p: T) {
+    if (p.status === 'cancelled') return { ...p, status: 'cancelled' as const };
     const status: 'active' | 'expired' =
       new Date() > new Date(p.valid_to) ? 'expired' : 'active';
     return { ...p, status };
@@ -400,16 +401,43 @@ class MockAPIClient {
     const db = await getDb();
     const me = await currentUser();
     let list = db.preApproved.map((p) => this.withLiveStatus(p));
-    // Residents see only their own; guards & admins see the whole society.
     if (me?.role === 'resident' || me?.role === 'staff') {
-      list = list.filter((p) => p.created_by === me.id);
+      // Residents see only their own, and a pass they removed is gone for them.
+      list = list.filter((p) => p.created_by === me.id && p.status !== 'cancelled');
     }
+    // Guards & admins keep cancelled passes for the record.
+    const rank = (s: string) => (s === 'active' ? 0 : s === 'expired' ? 1 : 2);
     list.sort(
       (a, b) =>
-        Number(a.status === 'expired') - Number(b.status === 'expired') ||
+        rank(a.status) - rank(b.status) ||
         +new Date(b.valid_from) - +new Date(a.valid_from)
     );
     return ok(list);
+  }
+
+  /** Resident removes a pre-approved pass ("visitor not coming"). It is kept as
+   *  a cancelled record so guards can see why it disappeared. */
+  async deletePreApproved(preApprovedId: number, reason?: string) {
+    await delay();
+    const db = await getDb();
+    const p = db.preApproved.find((x) => x.id === Number(preApprovedId));
+    if (!p) throw new ApiError(404, 'Pre-approved pass not found');
+    const me = await currentUser();
+    p.status = 'cancelled';
+    p.cancelled_at = new Date().toISOString();
+    p.cancelled_reason =
+      (reason && reason.trim()) || 'Resident removed the pre-approved request';
+    db.notifications.unshift({
+      id: nextId(db),
+      title: 'Pre-approved visitor removed',
+      message: `${p.name} for ${p.flat}: ${p.cancelled_reason}`,
+      type: 'pre_approved_cancelled',
+      is_read: false,
+      created_at: p.cancelled_at,
+      data: { preApprovedId: p.id, by: me?.id },
+    });
+    await persist();
+    return ok(this.withLiveStatus(p));
   }
 
   /** Guard logs entry for a resident's standing pre-approved visitor. */
@@ -418,6 +446,9 @@ class MockAPIClient {
     const db = await getDb();
     const p = db.preApproved.find((x) => x.id === Number(preApprovedId));
     if (!p) throw new ApiError(404, 'Pre-approved pass not found');
+    if (p.status === 'cancelled') {
+      throw new ApiError(400, 'This pre-approved pass was removed by the resident.');
+    }
     if (new Date() > new Date(p.valid_to)) {
       throw new ApiError(400, 'This pre-approved pass has expired.');
     }

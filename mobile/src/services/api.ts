@@ -164,6 +164,12 @@ class APIClient {
     return this.client.post(`/visitors/pre-approved/${preApprovedId}/admit/`);
   }
 
+  async deletePreApproved(preApprovedId: number, reason?: string) {
+    return this.client.delete(`/visitors/pre-approved/${preApprovedId}/`, {
+      data: { reason },
+    });
+  }
+
   // QR Passes
   async createQRPass(data: any) {
     return this.client.post('/visitors/qr-passes/', data);

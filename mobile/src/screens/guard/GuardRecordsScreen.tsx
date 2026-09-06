@@ -110,7 +110,9 @@ const GuardRecordsScreen: React.FC<any> = ({ navigation }) => {
           <EmptyState icon="account-clock-outline" title="No pre-approved visitors" />
         ) : (
           preApproved.map((p) => {
+            const cancelled = p.status === 'cancelled';
             const expired = p.status === 'expired';
+            const tone = cancelled || expired ? c.danger : c.success;
             return (
               <Card key={p.id} style={styles.card}>
                 <Card.Content>
@@ -122,31 +124,35 @@ const GuardRecordsScreen: React.FC<any> = ({ navigation }) => {
                       </Text>
                       <Text style={styles.meta}>{p.purpose}</Text>
                     </View>
-                    <View
-                      style={[
-                        styles.badge,
-                        { backgroundColor: expired ? `${c.danger}22` : `${c.success}22` },
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.badgeText,
-                          { color: expired ? c.danger : c.success },
-                        ]}
-                      >
-                        {prettyStatus(p.status)}
+                    <View style={[styles.badge, { backgroundColor: `${tone}22` }]}>
+                      <Text style={[styles.badgeText, { color: tone }]}>
+                        {cancelled ? 'Removed' : prettyStatus(p.status)}
                       </Text>
                     </View>
                   </View>
                   <Divider style={styles.divider} />
-                  <View style={styles.validRow}>
-                    <MaterialCommunityIcons name="calendar-range" size={16} color={c.muted} />
-                    <Text style={styles.validText}>
-                      Valid {p.days} day{p.days === 1 ? '' : 's'} ·{' '}
-                      {expired ? 'expired ' : 'until '}
-                      {smartDate(p.valid_to)}
-                    </Text>
-                  </View>
+                  {cancelled ? (
+                    <View style={styles.validRow}>
+                      <MaterialCommunityIcons
+                        name="comment-remove-outline"
+                        size={16}
+                        color={c.danger}
+                      />
+                      <Text style={[styles.validText, { color: c.danger }]}>
+                        {p.cancelled_reason || 'Resident removed the pre-approved request'}
+                        {p.cancelled_at ? ` · ${smartDate(p.cancelled_at)}` : ''}
+                      </Text>
+                    </View>
+                  ) : (
+                    <View style={styles.validRow}>
+                      <MaterialCommunityIcons name="calendar-range" size={16} color={c.muted} />
+                      <Text style={styles.validText}>
+                        Valid {p.days} day{p.days === 1 ? '' : 's'} ·{' '}
+                        {expired ? 'expired ' : 'until '}
+                        {smartDate(p.valid_to)}
+                      </Text>
+                    </View>
+                  )}
                 </Card.Content>
               </Card>
             );

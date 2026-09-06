@@ -115,30 +115,47 @@ const VisitorApprovalScreen: React.FC<any> = ({ navigation, route }) => {
         )}
 
         {!decided ? (
-          <View style={styles.actions}>
+          <>
+            <View style={styles.actions}>
+              <Button
+                mode="contained"
+                icon="check"
+                buttonColor={c.success}
+                onPress={() => decide(true)}
+                loading={busy}
+                disabled={busy}
+                style={styles.actionBtn}
+              >
+                Approve
+              </Button>
+              <Button
+                mode="contained"
+                icon="close"
+                buttonColor={c.danger}
+                onPress={() => decide(false)}
+                loading={busy}
+                disabled={busy}
+                style={styles.actionBtn}
+              >
+                Deny
+              </Button>
+            </View>
             <Button
-              mode="contained"
-              icon="check"
-              buttonColor={c.success}
-              onPress={() => decide(true)}
-              loading={busy}
+              mode="outlined"
+              icon="account-arrow-right-outline"
               disabled={busy}
-              style={styles.actionBtn}
+              onPress={() =>
+                navigation.navigate('GuardApp', { screen: 'GuardHome' })
+              }
+              style={styles.next}
             >
-              Approve
+              Let the resident decide
             </Button>
-            <Button
-              mode="contained"
-              icon="close"
-              buttonColor={c.danger}
-              onPress={() => decide(false)}
-              loading={busy}
-              disabled={busy}
-              style={styles.actionBtn}
-            >
-              Deny
-            </Button>
-          </View>
+            <Text style={styles.hint}>
+              Leaves the request pending. The resident is asked to approve, and it
+              stays on your Home screen with Accept / Deny in case you need to act.
+            </Text>
+          </>
         ) : approved && visitor.status !== 'entered' ? (
           <Button
             mode="contained"
@@ -183,7 +200,8 @@ const makeStyles = (c: Pal) =>
   input: { backgroundColor: c.card, marginBottom: spacing(4) },
   actions: { flexDirection: 'row', gap: spacing(3) },
   actionBtn: { flex: 1 },
-  next: { marginTop: spacing(2), paddingVertical: spacing(1) },
+  next: { marginTop: spacing(3), paddingVertical: spacing(1) },
+  hint: { fontSize: 12, color: c.muted, marginTop: spacing(2) },
 });
 
 export default VisitorApprovalScreen;

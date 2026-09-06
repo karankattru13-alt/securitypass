@@ -1,6 +1,14 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Card, Button, TextInput, ActivityIndicator, Divider } from 'react-native-paper';
+import {
+  Card,
+  Button,
+  TextInput,
+  ActivityIndicator,
+  Divider,
+  Portal,
+  Dialog,
+} from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 import { useFocusEffect } from '@react-navigation/native';
@@ -14,8 +22,6 @@ import api from '../../services/api';
 
 type Pal = ReturnType<typeof useAppColors>;
 
-const WEEK = 7 * 24 * 3600 * 1000;
-
 const PreApprovedVisitorsScreen: React.FC<any> = ({ navigation }) => {
   const c = useAppColors();
   const styles = React.useMemo(() => makeStyles(c), [c]);
@@ -28,6 +34,10 @@ const PreApprovedVisitorsScreen: React.FC<any> = ({ navigation }) => {
   const [purpose, setPurpose] = useState('');
   const [days, setDays] = useState('7');
   const [saving, setSaving] = useState(false);
+
+  const [removeTarget, setRemoveTarget] = useState<any | null>(null);
+  const [reason, setReason] = useState('');
+  const [removing, setRemoving] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -69,6 +79,24 @@ const PreApprovedVisitorsScreen: React.FC<any> = ({ navigation }) => {
     }
   };
 
+  const openRemove = (p: any) => {
+    setRemoveTarget(p);
+    setReason('');
+  };
+
+  const confirmRemove = async (quickReason?: string) => {
+    if (!removeTarget) return;
+    setRemoving(true);
+    try {
+      await api.deletePreApproved(removeTarget.id, quickReason ?? reason);
+      setRemoveTarget(null);
+      setReason('');
+      await load();
+    } finally {
+      setRemoving(false);
+    }
+  };
+
   return (
     <Screen padded={false}>
       <AppHeader
@@ -91,12 +119,7 @@ const PreApprovedVisitorsScreen: React.FC<any> = ({ navigation }) => {
         {showForm && (
           <Card style={styles.formCard}>
             <Card.Content>
-              <TextInput
-                label="Name *"
-                value={name}
-                onChangeText={setName}
-                style={styles.input}
-              />
+              <TextInput label="Name *" value={name} onChangeText={setName} style={styles.input} />
               <TextInput
                 label="Phone"
                 value={phone}
@@ -164,37 +187,87 @@ const PreApprovedVisitorsScreen: React.FC<any> = ({ navigation }) => {
                       { backgroundColor: expired ? `${c.danger}22` : `${c.success}22` },
                     ]}
                   >
-                    <Text
-                      style={[styles.pillText, { color: expired ? c.danger : c.success }]}
-                    >
+                    <Text style={[styles.pillText, { color: expired ? c.danger : c.success }]}>
                       {expired ? 'Expired' : 'Active'}
                     </Text>
                   </View>
                 </Card.Content>
                 <Divider />
+                <Card.Actions>
+                  <Button
+                    icon="trash-can-outline"
+                    textColor={c.danger}
+                    onPress={() => openRemove(p)}
+                  >
+                    Remove
+                  </Button>
+                </Card.Actions>
               </Card>
             );
           })
         )}
       </View>
+
+      <Portal>
+        <Dialog visible={!!removeTarget} onDismiss={() => setRemoveTarget(null)}>
+          <Dialog.Title>Remove pre-approved visitor</Dialog.Title>
+          <Dialog.Content>
+            <Text style={styles.dialogText}>
+              Remove the pass for <Text style={styles.dialogStrong}>{removeTarget?.name}</Text>?
+              The guards will see it was removed.
+            </Text>
+            <TextInput
+              label="Reason (optional)"
+              value={reason}
+              onChangeText={setReason}
+              mode="outlined"
+              style={styles.dialogInput}
+            />
+          </Dialog.Content>
+          <Dialog.Actions style={styles.dialogActions}>
+            <Button onPress={() => setRemoveTarget(null)} disabled={removing}>
+              Cancel
+            </Button>
+            <Button
+              onPress={() => confirmRemove('Visitor not coming')}
+              disabled={removing}
+            >
+              Visitor not coming
+            </Button>
+            <Button
+              mode="contained"
+              buttonColor={c.danger}
+              loading={removing}
+              disabled={removing}
+              onPress={() => confirmRemove()}
+            >
+              Remove
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </Screen>
   );
 };
 
 const makeStyles = (c: Pal) =>
   StyleSheet.create({
-  body: { padding: spacing(4) },
-  toggle: { marginBottom: spacing(4) },
-  formCard: { backgroundColor: c.card, marginBottom: spacing(4) },
-  input: { marginBottom: spacing(3), backgroundColor: c.card },
-  card: { backgroundColor: c.card, marginBottom: spacing(3) },
-  row: { flexDirection: 'row', alignItems: 'center' },
-  info: { flex: 1, marginLeft: spacing(3) },
-  name: { fontSize: 15, fontWeight: '700', color: c.text },
-  meta: { fontSize: 13, color: c.muted, marginTop: 2 },
-  valid: { fontSize: 11, color: c.muted, marginTop: 4 },
-  pill: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, alignSelf: 'flex-start' },
-  pillText: { fontSize: 11, fontWeight: '800' },
-});
+    body: { padding: spacing(4) },
+    toggle: { marginBottom: spacing(4) },
+    formCard: { backgroundColor: c.card, marginBottom: spacing(4) },
+    input: { marginBottom: spacing(3), backgroundColor: c.card },
+    card: { backgroundColor: c.card, marginBottom: spacing(3) },
+    row: { flexDirection: 'row', alignItems: 'center' },
+    info: { flex: 1, marginLeft: spacing(3) },
+    name: { fontSize: 15, fontWeight: '700', color: c.text },
+    meta: { fontSize: 13, color: c.muted, marginTop: 2 },
+    valid: { fontSize: 11, color: c.muted, marginTop: 4 },
+    pill: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, alignSelf: 'flex-start' },
+    pillText: { fontSize: 11, fontWeight: '800' },
+    dialogText: { color: c.text, fontSize: 14, marginBottom: spacing(3) },
+    dialogStrong: { fontWeight: '800' },
+    dialogInput: { backgroundColor: c.card },
+    dialogActions: { flexWrap: 'wrap', justifyContent: 'flex-end' },
+  });
 
 export default PreApprovedVisitorsScreen;

@@ -98,10 +98,13 @@ export interface MockPreApproved {
   flat: string;
   resident_name: string;
   created_by: number;
-  status: 'active' | 'expired';
+  status: 'active' | 'expired' | 'cancelled';
   /** True while a guard has admitted this pass and the visitor is inside. */
   admitted?: boolean;
   admitted_visit_id?: number;
+  /** Set when the resident removes the pass (e.g. "visitor not coming"). */
+  cancelled_reason?: string;
+  cancelled_at?: string;
 }
 
 export interface MockQRPass {
