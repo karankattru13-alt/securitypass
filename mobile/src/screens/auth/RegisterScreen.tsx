@@ -4,11 +4,15 @@ import { TextInput, Button, HelperText } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
-import { colors, spacing } from '../../theme';
+import { useAppColors, spacing } from '../../theme';
 import { AppDispatch, RootState } from '../../store';
 import { requestOTP, verifyOTP, clearError } from '../../store/slices/authSlice';
 
+type Pal = ReturnType<typeof useAppColors>;
+
 const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
+  const c = useAppColors();
+  const styles = React.useMemo(() => makeStyles(c), [c]);
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error } = useSelector((s: RootState) => s.auth);
   const role: 'resident' | 'guard' = route.params?.role === 'guard' ? 'guard' : 'resident';
@@ -46,7 +50,7 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
       <AppHeader
         title={isGuard ? 'Create guard account' : 'Create account'}
         subtitle={isGuard ? 'Security staff sign-up' : 'Resident sign-up'}
-        color={isGuard ? colors.guard : colors.primary}
+        color={isGuard ? c.guard : c.primary}
         onBack={() => navigation.goBack()}
         hideLogout
       />
@@ -101,7 +105,7 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
             onPress={sendCode}
             loading={loading}
             disabled={loading || !canSend}
-            buttonColor={isGuard ? colors.guard : colors.primary}
+            buttonColor={isGuard ? c.guard : c.primary}
             style={styles.button}
           >
             Send OTP
@@ -112,7 +116,7 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
             onPress={verify}
             loading={loading}
             disabled={loading || code.length < 6}
-            buttonColor={isGuard ? colors.guard : colors.primary}
+            buttonColor={isGuard ? c.guard : c.primary}
             style={styles.button}
           >
             {isGuard ? 'Verify & Create Guard Account' : 'Verify & Create Account'}
@@ -123,10 +127,11 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Pal) =>
+  StyleSheet.create({
   body: { padding: spacing(4) },
-  input: { marginBottom: spacing(3), backgroundColor: colors.card },
-  hint: { color: colors.muted, fontSize: 12, marginBottom: spacing(2) },
+  input: { marginBottom: spacing(3), backgroundColor: c.card },
+  hint: { color: c.muted, fontSize: 12, marginBottom: spacing(2) },
   button: { marginTop: spacing(2), paddingVertical: spacing(1) },
 });
 

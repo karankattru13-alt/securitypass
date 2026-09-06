@@ -6,20 +6,26 @@ import { useFocusEffect } from '@react-navigation/native';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
 import VisitorCard from '../../components/VisitorCard';
-import { colors, spacing, radius } from '../../theme';
+import { useAppColors, spacing, radius } from '../../theme';
 import api from '../../services/api';
 
-const Stat = ({ icon, label, value, tint }: any) => (
-  <Card style={styles.statCard}>
-    <Card.Content style={styles.statInner}>
-      <MaterialCommunityIcons name={icon} size={26} color={tint} />
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </Card.Content>
-  </Card>
-);
+type Pal = ReturnType<typeof useAppColors>;
+
 
 const AdminDashboardScreen: React.FC<any> = ({ navigation }) => {
+  const c = useAppColors();
+  const styles = React.useMemo(() => makeStyles(c), [c]);
+
+  const Stat = ({ icon, label, value, tint }: any) => (
+    <Card style={styles.statCard}>
+      <Card.Content style={styles.statInner}>
+        <MaterialCommunityIcons name={icon} size={26} color={tint} />
+        <Text style={styles.statValue}>{value}</Text>
+        <Text style={styles.statLabel}>{label}</Text>
+      </Card.Content>
+    </Card>
+  );
+
   const [society, setSociety] = useState<any>(null);
   const [stats, setStats] = useState<any>({ todayVisitors: 0, currentlyInside: 0, pendingApprovals: 0 });
   const [recent, setRecent] = useState<any[]>([]);
@@ -52,7 +58,7 @@ const AdminDashboardScreen: React.FC<any> = ({ navigation }) => {
   if (loading) {
     return (
       <Screen>
-        <ActivityIndicator style={{ marginTop: spacing(12) }} color={colors.admin} />
+        <ActivityIndicator style={{ marginTop: spacing(12) }} color={c.admin} />
       </Screen>
     );
   }
@@ -62,19 +68,19 @@ const AdminDashboardScreen: React.FC<any> = ({ navigation }) => {
       <AppHeader
         title="Admin Dashboard"
         subtitle={society?.name}
-        color={colors.admin}
+        color={c.admin}
         icon="view-dashboard"
       />
       <View style={styles.body}>
         <View style={styles.statGrid}>
-          <Stat icon="account-group" label="Residents" value={society?.total_residents} tint={colors.admin} />
-          <Stat icon="home-city" label="Flats" value={society?.total_flats} tint={colors.admin} />
-          <Stat icon="shield-account" label="Guards" value={society?.total_guards} tint={colors.admin} />
+          <Stat icon="account-group" label="Residents" value={society?.total_residents} tint={c.admin} />
+          <Stat icon="home-city" label="Flats" value={society?.total_flats} tint={c.admin} />
+          <Stat icon="shield-account" label="Guards" value={society?.total_guards} tint={c.admin} />
         </View>
         <View style={styles.statGrid}>
-          <Stat icon="account-clock" label="Today" value={stats.todayVisitors} tint={colors.info} />
-          <Stat icon="login-variant" label="Inside" value={stats.currentlyInside} tint={colors.success} />
-          <Stat icon="timer-sand" label="Pending" value={stats.pendingApprovals} tint={colors.warning} />
+          <Stat icon="account-clock" label="Today" value={stats.todayVisitors} tint={c.info} />
+          <Stat icon="login-variant" label="Inside" value={stats.currentlyInside} tint={c.success} />
+          <Stat icon="timer-sand" label="Pending" value={stats.pendingApprovals} tint={c.warning} />
         </View>
 
         <View style={styles.linkRow}>
@@ -105,19 +111,20 @@ const AdminDashboardScreen: React.FC<any> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Pal) =>
+  StyleSheet.create({
   body: { padding: spacing(4) },
   statGrid: { flexDirection: 'row', gap: spacing(2), marginBottom: spacing(3) },
-  statCard: { flex: 1, backgroundColor: colors.card },
+  statCard: { flex: 1, backgroundColor: c.card },
   statInner: { alignItems: 'center' },
-  statValue: { fontSize: 22, fontWeight: '800', color: colors.text, marginTop: spacing(1) },
-  statLabel: { fontSize: 11, color: colors.muted, marginTop: 2 },
+  statValue: { fontSize: 22, fontWeight: '800', color: c.text, marginTop: spacing(1) },
+  statLabel: { fontSize: 11, color: c.muted, marginTop: 2 },
   linkRow: { flexDirection: 'row', gap: spacing(3), marginVertical: spacing(3) },
   link: { flex: 1, borderRadius: radius.sm },
   section: {
     fontSize: 16,
     fontWeight: '800',
-    color: colors.text,
+    color: c.text,
     marginTop: spacing(3),
     marginBottom: spacing(3),
   },

@@ -7,7 +7,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, spacing } from '../theme';
+import { useAppColors, spacing } from '../theme';
 
 interface Props {
   children: React.ReactNode;
@@ -28,14 +28,21 @@ const Screen: React.FC<Props> = ({
   style,
   edges = ['top', 'bottom', 'left', 'right'],
 }) => {
+  const c = useAppColors();
   const inner = (
-    <View style={[padded && styles.padded, !scroll && styles.flex, style]}>
+    <View
+      style={[
+        padded && styles.padded,
+        !scroll && styles.flex,
+        style,
+      ]}
+    >
       {children}
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.safe} edges={edges}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: c.bg }]} edges={edges}>
       {scroll ? (
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -45,8 +52,8 @@ const Screen: React.FC<Props> = ({
               <RefreshControl
                 refreshing={!!refreshing}
                 onRefresh={onRefresh}
-                colors={[colors.primary]}
-                tintColor={colors.primary}
+                colors={[c.primary]}
+                tintColor={c.primary}
               />
             ) : undefined
           }
@@ -61,7 +68,7 @@ const Screen: React.FC<Props> = ({
 };
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.bg },
+  safe: { flex: 1 },
   flex: { flex: 1 },
   scrollContent: { flexGrow: 1, paddingBottom: spacing(8) },
   padded: { padding: spacing(4) },

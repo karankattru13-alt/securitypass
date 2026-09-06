@@ -4,9 +4,11 @@ import { TextInput, Button, SegmentedButtons, HelperText, Text } from 'react-nat
 import { useDispatch, useSelector } from 'react-redux';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
-import { colors, spacing } from '../../theme';
+import { useAppColors, spacing } from '../../theme';
 import { AppDispatch, RootState } from '../../store';
 import { createVisitor } from '../../store/slices/visitorSlice';
+
+type Pal = ReturnType<typeof useAppColors>;
 
 const TYPES = [
   { value: 'guest', label: 'Guest' },
@@ -15,6 +17,8 @@ const TYPES = [
 ];
 
 const VisitorRequestScreen: React.FC<any> = ({ navigation }) => {
+  const c = useAppColors();
+  const styles = React.useMemo(() => makeStyles(c), [c]);
   const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((s: RootState) => s.auth);
   const [type, setType] = useState('guest');
@@ -54,7 +58,7 @@ const VisitorRequestScreen: React.FC<any> = ({ navigation }) => {
       <AppHeader
         title="Expect a Guest"
         subtitle="Pre-clear entry for your flat"
-        color={colors.resident}
+        color={c.resident}
         onBack={() => navigation.goBack()}
       />
       <View style={styles.body}>
@@ -107,7 +111,7 @@ const VisitorRequestScreen: React.FC<any> = ({ navigation }) => {
           onPress={submit}
           loading={saving}
           disabled={saving || !user?.flat}
-          buttonColor={colors.resident}
+          buttonColor={c.resident}
           style={styles.button}
         >
           Add Expected Visitor
@@ -117,12 +121,13 @@ const VisitorRequestScreen: React.FC<any> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Pal) =>
+  StyleSheet.create({
   body: { padding: spacing(4) },
   blocker: { marginBottom: spacing(2) },
-  hint: { color: colors.muted, fontSize: 13, marginBottom: spacing(4) },
+  hint: { color: c.muted, fontSize: 13, marginBottom: spacing(4) },
   segment: { marginBottom: spacing(4) },
-  input: { marginBottom: spacing(3), backgroundColor: colors.card },
+  input: { marginBottom: spacing(3), backgroundColor: c.card },
   button: { marginTop: spacing(2), paddingVertical: spacing(1) },
 });
 

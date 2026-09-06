@@ -3,9 +3,11 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Card, Divider, Switch, Avatar } from 'react-native-paper';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
-import { colors, spacing } from '../../theme';
+import { useAppColors, spacing } from '../../theme';
 import { initials } from '../../utils/format';
 import api from '../../services/api';
+
+type Pal = ReturnType<typeof useAppColors>;
 
 interface Guard {
   id: number;
@@ -24,6 +26,8 @@ const SEED: Guard[] = [
 ];
 
 const AdminGuardsScreen: React.FC<any> = ({ navigation }) => {
+  const c = useAppColors();
+  const styles = React.useMemo(() => makeStyles(c), [c]);
   const [guards, setGuards] = useState<Guard[]>(SEED);
 
   const toggle = (id: number) => {
@@ -44,7 +48,7 @@ const AdminGuardsScreen: React.FC<any> = ({ navigation }) => {
       <AppHeader
         title="Security Staff"
         subtitle={`${onDuty} of ${guards.length} on duty`}
-        color={colors.admin}
+        color={c.admin}
         onBack={() => navigation.goBack()}
       />
       <View style={styles.body}>
@@ -55,7 +59,7 @@ const AdminGuardsScreen: React.FC<any> = ({ navigation }) => {
                 <Avatar.Text
                   size={44}
                   label={initials(...g.name.split(' '))}
-                  style={{ backgroundColor: g.onDuty ? colors.success : colors.muted }}
+                  style={{ backgroundColor: g.onDuty ? c.success : c.muted }}
                 />
                 <View style={styles.info}>
                   <Text style={styles.name}>{g.name}</Text>
@@ -65,7 +69,7 @@ const AdminGuardsScreen: React.FC<any> = ({ navigation }) => {
                   <Text style={styles.phone}>{g.phone}</Text>
                 </View>
                 <View style={styles.dutyWrap}>
-                  <Text style={[styles.duty, { color: g.onDuty ? colors.success : colors.muted }]}>
+                  <Text style={[styles.duty, { color: g.onDuty ? c.success : c.muted }]}>
                     {g.onDuty ? 'On duty' : 'Off'}
                   </Text>
                   <Switch value={g.onDuty} onValueChange={() => toggle(g.id)} />
@@ -80,14 +84,15 @@ const AdminGuardsScreen: React.FC<any> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Pal) =>
+  StyleSheet.create({
   body: { padding: spacing(4) },
-  card: { backgroundColor: colors.card },
+  card: { backgroundColor: c.card },
   row: { flexDirection: 'row', alignItems: 'center', padding: spacing(3) },
   info: { flex: 1, marginLeft: spacing(3) },
-  name: { fontSize: 15, fontWeight: '700', color: colors.text },
-  meta: { fontSize: 12, color: colors.muted, marginTop: 2 },
-  phone: { fontSize: 12, color: colors.muted, marginTop: 2 },
+  name: { fontSize: 15, fontWeight: '700', color: c.text },
+  meta: { fontSize: 12, color: c.muted, marginTop: 2 },
+  phone: { fontSize: 12, color: c.muted, marginTop: 2 },
   dutyWrap: { alignItems: 'center' },
   duty: { fontSize: 11, fontWeight: '700', marginBottom: 2 },
 });

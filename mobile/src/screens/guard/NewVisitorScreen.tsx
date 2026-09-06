@@ -12,10 +12,12 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useDispatch } from 'react-redux';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
-import { colors, spacing, radius } from '../../theme';
+import { useAppColors, spacing, radius } from '../../theme';
 import { AppDispatch } from '../../store';
 import { createVisitor } from '../../store/slices/visitorSlice';
 import api from '../../services/api';
+
+type Pal = ReturnType<typeof useAppColors>;
 
 const TYPES = [
   { value: 'guest', label: 'Guest', icon: 'account' },
@@ -32,6 +34,8 @@ interface Resident {
 }
 
 const NewVisitorScreen: React.FC<any> = ({ navigation, route }) => {
+  const c = useAppColors();
+  const styles = React.useMemo(() => makeStyles(c), [c]);
   const dispatch = useDispatch<AppDispatch>();
   const [type, setType] = useState<string>(route.params?.type ?? 'guest');
   const [name, setName] = useState('');
@@ -103,7 +107,7 @@ const NewVisitorScreen: React.FC<any> = ({ navigation, route }) => {
       <AppHeader
         title="New Visitor"
         subtitle="Send an entry request to the resident"
-        color={colors.guard}
+        color={c.guard}
         onBack={() => navigation.goBack()}
       />
       <View style={styles.body}>
@@ -111,7 +115,7 @@ const NewVisitorScreen: React.FC<any> = ({ navigation, route }) => {
         {selected ? (
           <Card style={styles.selectedCard}>
             <Card.Content style={styles.selectedRow}>
-              <MaterialCommunityIcons name="account-check" size={26} color={colors.guard} />
+              <MaterialCommunityIcons name="account-check" size={26} color={c.guard} />
               <View style={styles.selectedInfo}>
                 <Text style={styles.selectedName}>{selected.name}</Text>
                 <Text style={styles.selectedMeta}>
@@ -133,7 +137,7 @@ const NewVisitorScreen: React.FC<any> = ({ navigation, route }) => {
               style={styles.input}
             />
             {loadingResidents ? (
-              <ActivityIndicator color={colors.guard} style={{ marginVertical: spacing(4) }} />
+              <ActivityIndicator color={c.guard} style={{ marginVertical: spacing(4) }} />
             ) : (
               <Card style={styles.listCard}>
                 {matches.length === 0 ? (
@@ -149,7 +153,7 @@ const NewVisitorScreen: React.FC<any> = ({ navigation, route }) => {
                         setError(null);
                       }}
                     >
-                      <MaterialCommunityIcons name="account" size={22} color={colors.muted} />
+                      <MaterialCommunityIcons name="account" size={22} color={c.muted} />
                       <View style={styles.residentInfo}>
                         <Text style={styles.residentName}>{r.name}</Text>
                         <Text style={styles.residentMeta}>
@@ -217,7 +221,7 @@ const NewVisitorScreen: React.FC<any> = ({ navigation, route }) => {
           onPress={submit}
           loading={saving}
           disabled={saving}
-          buttonColor={colors.guard}
+          buttonColor={c.guard}
           style={styles.button}
         >
           Send Request & Add Photo
@@ -227,24 +231,25 @@ const NewVisitorScreen: React.FC<any> = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Pal) =>
+  StyleSheet.create({
   body: { padding: spacing(4) },
-  label: { fontSize: 13, color: colors.muted, marginBottom: spacing(2) },
+  label: { fontSize: 13, color: c.muted, marginBottom: spacing(2) },
   segment: { marginBottom: spacing(4) },
-  input: { marginBottom: spacing(3), backgroundColor: colors.card },
+  input: { marginBottom: spacing(3), backgroundColor: c.card },
   button: { marginTop: spacing(2), paddingVertical: spacing(1) },
-  selectedCard: { backgroundColor: '#E8F1FF', marginBottom: spacing(2) },
+  selectedCard: { backgroundColor: c.cardAlt, marginBottom: spacing(2) },
   selectedRow: { flexDirection: 'row', alignItems: 'center' },
   selectedInfo: { flex: 1, marginLeft: spacing(3) },
-  selectedName: { fontSize: 15, fontWeight: '700', color: colors.text },
-  selectedMeta: { fontSize: 12, color: colors.muted, marginTop: 2 },
-  listCard: { backgroundColor: colors.card, marginBottom: spacing(2) },
-  noMatch: { padding: spacing(4), color: colors.muted },
+  selectedName: { fontSize: 15, fontWeight: '700', color: c.text },
+  selectedMeta: { fontSize: 12, color: c.muted, marginTop: 2 },
+  listCard: { backgroundColor: c.card, marginBottom: spacing(2) },
+  noMatch: { padding: spacing(4), color: c.muted },
   residentRow: { flexDirection: 'row', alignItems: 'center', padding: spacing(3) },
-  rowBorder: { borderTopWidth: 1, borderTopColor: colors.border },
+  rowBorder: { borderTopWidth: 1, borderTopColor: c.border },
   residentInfo: { marginLeft: spacing(3), flex: 1 },
-  residentName: { fontSize: 14, fontWeight: '600', color: colors.text },
-  residentMeta: { fontSize: 12, color: colors.muted, marginTop: 2 },
+  residentName: { fontSize: 14, fontWeight: '600', color: c.text },
+  residentMeta: { fontSize: 12, color: c.muted, marginTop: 2 },
 });
 
 export default NewVisitorScreen;

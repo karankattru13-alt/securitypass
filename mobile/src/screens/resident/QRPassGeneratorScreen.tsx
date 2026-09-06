@@ -5,12 +5,16 @@ import { useSelector } from 'react-redux';
 import QRView from '../../components/QRView';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
-import { colors, spacing, radius } from '../../theme';
+import { useAppColors, spacing, radius } from '../../theme';
 import { smartDate } from '../../utils/format';
 import { RootState } from '../../store';
 import api from '../../services/api';
 
+type Pal = ReturnType<typeof useAppColors>;
+
 const QRPassGeneratorScreen: React.FC<any> = ({ navigation }) => {
+  const c = useAppColors();
+  const styles = React.useMemo(() => makeStyles(c), [c]);
   const { user } = useSelector((s: RootState) => s.auth);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -51,12 +55,12 @@ const QRPassGeneratorScreen: React.FC<any> = ({ navigation }) => {
       <AppHeader
         title="QR Gate Pass"
         subtitle="Share with your visitor"
-        color={colors.resident}
+        color={c.resident}
         onBack={() => navigation.goBack()}
       />
       <View style={styles.body}>
         {loading ? (
-          <ActivityIndicator color={colors.resident} style={{ marginTop: spacing(12) }} />
+          <ActivityIndicator color={c.resident} style={{ marginTop: spacing(12) }} />
         ) : pass ? (
           <Card style={styles.passCard}>
             <Card.Content style={styles.passContent}>
@@ -71,7 +75,7 @@ const QRPassGeneratorScreen: React.FC<any> = ({ navigation }) => {
               <Text style={styles.passValid}>Valid until {smartDate(pass.valid_to)}</Text>
               <Button
                 mode="contained"
-                buttonColor={colors.resident}
+                buttonColor={c.resident}
                 onPress={reset}
                 style={styles.again}
               >
@@ -115,7 +119,7 @@ const QRPassGeneratorScreen: React.FC<any> = ({ navigation }) => {
             <Button
               mode="contained"
               icon="qrcode"
-              buttonColor={colors.resident}
+              buttonColor={c.resident}
               onPress={generate}
               style={styles.button}
             >
@@ -128,24 +132,25 @@ const QRPassGeneratorScreen: React.FC<any> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Pal) =>
+  StyleSheet.create({
   body: { padding: spacing(4) },
-  input: { marginBottom: spacing(3), backgroundColor: colors.card },
+  input: { marginBottom: spacing(3), backgroundColor: c.card },
   button: { marginTop: spacing(2), paddingVertical: spacing(1) },
-  passCard: { backgroundColor: colors.card },
+  passCard: { backgroundColor: c.card },
   passContent: { alignItems: 'center' },
   qrWrap: {
     padding: spacing(4),
     backgroundColor: '#fff',
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     marginVertical: spacing(3),
   },
-  token: { fontSize: 16, fontWeight: '800', letterSpacing: 1, color: colors.text },
-  passName: { fontSize: 16, fontWeight: '700', color: colors.text, marginTop: spacing(3) },
-  passMeta: { fontSize: 13, color: colors.muted, marginTop: 2 },
-  passValid: { fontSize: 12, color: colors.warning, marginTop: spacing(2), fontWeight: '600' },
+  token: { fontSize: 16, fontWeight: '800', letterSpacing: 1, color: c.text },
+  passName: { fontSize: 16, fontWeight: '700', color: c.text, marginTop: spacing(3) },
+  passMeta: { fontSize: 13, color: c.muted, marginTop: 2 },
+  passValid: { fontSize: 12, color: c.warning, marginTop: spacing(2), fontWeight: '600' },
   again: { marginTop: spacing(5), alignSelf: 'stretch' },
 });
 

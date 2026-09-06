@@ -7,14 +7,18 @@ import { useFocusEffect } from '@react-navigation/native';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
 import EmptyState from '../../components/EmptyState';
-import { colors, spacing } from '../../theme';
+import { useAppColors, spacing } from '../../theme';
 import { smartDate } from '../../utils/format';
 import { RootState } from '../../store';
 import api from '../../services/api';
 
+type Pal = ReturnType<typeof useAppColors>;
+
 const WEEK = 7 * 24 * 3600 * 1000;
 
 const PreApprovedVisitorsScreen: React.FC<any> = ({ navigation }) => {
+  const c = useAppColors();
+  const styles = React.useMemo(() => makeStyles(c), [c]);
   const { user } = useSelector((s: RootState) => s.auth);
   const [list, setList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -69,14 +73,14 @@ const PreApprovedVisitorsScreen: React.FC<any> = ({ navigation }) => {
       <AppHeader
         title="Pre-Approved"
         subtitle="Recurring visitors & help"
-        color={colors.resident}
+        color={c.resident}
         onBack={() => navigation.goBack()}
       />
       <View style={styles.body}>
         <Button
           mode={showForm ? 'outlined' : 'contained'}
           icon={showForm ? 'close' : 'plus'}
-          buttonColor={showForm ? undefined : colors.resident}
+          buttonColor={showForm ? undefined : c.resident}
           onPress={() => setShowForm((v) => !v)}
           style={styles.toggle}
         >
@@ -115,7 +119,7 @@ const PreApprovedVisitorsScreen: React.FC<any> = ({ navigation }) => {
               />
               <Button
                 mode="contained"
-                buttonColor={colors.resident}
+                buttonColor={c.resident}
                 loading={saving}
                 disabled={saving}
                 onPress={add}
@@ -127,7 +131,7 @@ const PreApprovedVisitorsScreen: React.FC<any> = ({ navigation }) => {
         )}
 
         {loading ? (
-          <ActivityIndicator color={colors.resident} style={{ marginTop: spacing(8) }} />
+          <ActivityIndicator color={c.resident} style={{ marginTop: spacing(8) }} />
         ) : list.length === 0 ? (
           <EmptyState icon="account-check-outline" title="No pre-approved visitors" />
         ) : (
@@ -137,7 +141,7 @@ const PreApprovedVisitorsScreen: React.FC<any> = ({ navigation }) => {
                 <MaterialCommunityIcons
                   name="account-check"
                   size={28}
-                  color={colors.resident}
+                  color={c.resident}
                 />
                 <View style={styles.info}>
                   <Text style={styles.name}>{p.name}</Text>
@@ -157,17 +161,18 @@ const PreApprovedVisitorsScreen: React.FC<any> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Pal) =>
+  StyleSheet.create({
   body: { padding: spacing(4) },
   toggle: { marginBottom: spacing(4) },
-  formCard: { backgroundColor: colors.card, marginBottom: spacing(4) },
-  input: { marginBottom: spacing(3), backgroundColor: colors.card },
-  card: { backgroundColor: colors.card, marginBottom: spacing(3) },
+  formCard: { backgroundColor: c.card, marginBottom: spacing(4) },
+  input: { marginBottom: spacing(3), backgroundColor: c.card },
+  card: { backgroundColor: c.card, marginBottom: spacing(3) },
   row: { flexDirection: 'row', alignItems: 'center' },
   info: { flex: 1, marginLeft: spacing(3) },
-  name: { fontSize: 15, fontWeight: '700', color: colors.text },
-  meta: { fontSize: 13, color: colors.muted, marginTop: 2 },
-  valid: { fontSize: 11, color: colors.muted, marginTop: 4 },
+  name: { fontSize: 15, fontWeight: '700', color: c.text },
+  meta: { fontSize: 13, color: c.muted, marginTop: 2 },
+  valid: { fontSize: 11, color: c.muted, marginTop: 4 },
 });
 
 export default PreApprovedVisitorsScreen;

@@ -5,9 +5,11 @@ import { useFocusEffect } from '@react-navigation/native';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
 import EmptyState from '../../components/EmptyState';
-import { colors, spacing } from '../../theme';
+import { useAppColors, spacing } from '../../theme';
 import { initials } from '../../utils/format';
 import api from '../../services/api';
+
+type Pal = ReturnType<typeof useAppColors>;
 
 interface Resident {
   id: number;
@@ -20,6 +22,8 @@ interface Resident {
 }
 
 const AdminResidentsScreen: React.FC<any> = ({ navigation }) => {
+  const c = useAppColors();
+  const styles = React.useMemo(() => makeStyles(c), [c]);
   const [residents, setResidents] = useState<Resident[]>([]);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -60,7 +64,7 @@ const AdminResidentsScreen: React.FC<any> = ({ navigation }) => {
       <AppHeader
         title="Residents"
         subtitle={`${residents.length} registered`}
-        color={colors.admin}
+        color={c.admin}
         onBack={() => navigation.goBack()}
       />
       <View style={styles.body}>
@@ -80,7 +84,7 @@ const AdminResidentsScreen: React.FC<any> = ({ navigation }) => {
         </View>
 
         {loading ? (
-          <ActivityIndicator style={{ marginTop: spacing(10) }} color={colors.admin} />
+          <ActivityIndicator style={{ marginTop: spacing(10) }} color={c.admin} />
         ) : filtered.length === 0 ? (
           <EmptyState icon="account-search-outline" title="No residents match" />
         ) : (
@@ -91,7 +95,7 @@ const AdminResidentsScreen: React.FC<any> = ({ navigation }) => {
                   <Avatar.Text
                     size={40}
                     label={initials(r.first_name, r.last_name)}
-                    style={{ backgroundColor: colors.admin }}
+                    style={{ backgroundColor: c.admin }}
                   />
                   <View style={styles.info}>
                     <Text style={styles.name}>{r.name}</Text>
@@ -115,20 +119,21 @@ const AdminResidentsScreen: React.FC<any> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Pal) =>
+  StyleSheet.create({
   body: { padding: spacing(4) },
-  search: { marginBottom: spacing(3), backgroundColor: colors.card },
+  search: { marginBottom: spacing(3), backgroundColor: c.card },
   chips: { flexDirection: 'row', gap: spacing(2), marginBottom: spacing(3) },
-  chip: { backgroundColor: colors.card },
-  card: { backgroundColor: colors.card },
+  chip: { backgroundColor: c.card },
+  card: { backgroundColor: c.card },
   row: { flexDirection: 'row', alignItems: 'center', padding: spacing(3) },
   info: { flex: 1, marginLeft: spacing(3) },
-  name: { fontSize: 15, fontWeight: '700', color: colors.text },
-  meta: { fontSize: 12, color: colors.muted, marginTop: 2 },
+  name: { fontSize: 15, fontWeight: '700', color: c.text },
+  meta: { fontSize: 12, color: c.muted, marginTop: 2 },
   flatWrap: { alignItems: 'flex-end', minWidth: 64 },
-  flatLabel: { fontSize: 10, color: colors.muted, textTransform: 'uppercase' },
-  flat: { fontSize: 15, fontWeight: '800', color: colors.admin, marginTop: 2 },
-  flatMissing: { color: colors.border },
+  flatLabel: { fontSize: 10, color: c.muted, textTransform: 'uppercase' },
+  flat: { fontSize: 15, fontWeight: '800', color: c.admin, marginTop: 2 },
+  flatMissing: { color: c.border },
 });
 
 export default AdminResidentsScreen;

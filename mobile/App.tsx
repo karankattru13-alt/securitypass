@@ -10,7 +10,7 @@ import { PaperProvider } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 
 import store from './src/store';
-import { paperTheme, colors } from './src/theme';
+import { useThemeBundle, useAppColors } from './src/theme';
 import { useAuth } from './src/hooks/useAuth';
 import { useNotifications } from './src/hooks/useNotifications';
 
@@ -65,9 +65,11 @@ const tabScreenOptions =
   });
 
 // Guard Navigation
-const GuardNavigator = () => (
+const GuardNavigator = () => {
+  const c = useAppColors();
+  return (
   <Tab.Navigator
-    screenOptions={tabScreenOptions(colors.guard, {
+    screenOptions={tabScreenOptions(c.guard, {
       GuardHome: ['home', 'home-outline'],
       GuardHistory: ['history', 'history'],
       Profile: ['account', 'account-outline'],
@@ -77,12 +79,15 @@ const GuardNavigator = () => (
     <Tab.Screen name="GuardHistory" component={GuardHistoryScreen} options={{ title: 'History' }} />
     <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
   </Tab.Navigator>
-);
+  );
+};
 
 // Resident Navigation
-const ResidentNavigator = () => (
+const ResidentNavigator = () => {
+  const c = useAppColors();
+  return (
   <Tab.Navigator
-    screenOptions={tabScreenOptions(colors.resident, {
+    screenOptions={tabScreenOptions(c.resident, {
       ResidentHome: ['home', 'home-outline'],
       ResidentHistory: ['history', 'history'],
       Profile: ['account', 'account-outline'],
@@ -96,12 +101,15 @@ const ResidentNavigator = () => (
     />
     <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
   </Tab.Navigator>
-);
+  );
+};
 
 // Admin Navigation
-const AdminNavigator = () => (
+const AdminNavigator = () => {
+  const c = useAppColors();
+  return (
   <Tab.Navigator
-    screenOptions={tabScreenOptions(colors.admin, {
+    screenOptions={tabScreenOptions(c.admin, {
       AdminDashboard: ['chart-box', 'chart-box-outline'],
       AdminSociety: ['home-city', 'home-city-outline'],
       Profile: ['account', 'account-outline'],
@@ -115,7 +123,8 @@ const AdminNavigator = () => (
     <Tab.Screen name="AdminSociety" component={AdminSocietyScreen} options={{ title: 'Society' }} />
     <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
   </Tab.Navigator>
-);
+  );
+};
 
 // Auth Stack
 const AuthNavigator = () => (
@@ -176,17 +185,24 @@ const RootNavigator = () => {
   );
 };
 
+const ThemedApp = () => {
+  const { paper, nav } = useThemeBundle();
+  return (
+    <PaperProvider theme={paper}>
+      <StatusBar style="light" />
+      <NavigationContainer theme={nav}>
+        <RootNavigator />
+      </NavigationContainer>
+    </PaperProvider>
+  );
+};
+
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Provider store={store}>
         <SafeAreaProvider>
-          <PaperProvider theme={paperTheme}>
-            <StatusBar style="light" />
-            <NavigationContainer>
-              <RootNavigator />
-            </NavigationContainer>
-          </PaperProvider>
+          <ThemedApp />
         </SafeAreaProvider>
       </Provider>
     </GestureHandlerRootView>

@@ -7,7 +7,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
 import EmptyState from '../../components/EmptyState';
-import { colors, spacing } from '../../theme';
+import { useAppColors, spacing } from '../../theme';
 import { timeAgo } from '../../utils/format';
 import { AppDispatch, RootState } from '../../store';
 import {
@@ -15,6 +15,8 @@ import {
   markNotificationRead,
   Notification,
 } from '../../store/slices/notificationSlice';
+
+type Pal = ReturnType<typeof useAppColors>;
 
 const iconFor = (type: string): keyof typeof MaterialCommunityIcons.glyphMap => {
   if (type.includes('approved')) return 'check-circle-outline';
@@ -25,6 +27,8 @@ const iconFor = (type: string): keyof typeof MaterialCommunityIcons.glyphMap => 
 };
 
 const NotificationsScreen: React.FC<any> = ({ navigation }) => {
+  const c = useAppColors();
+  const styles = React.useMemo(() => makeStyles(c), [c]);
   const dispatch = useDispatch<AppDispatch>();
   const { notifications, loading, unreadCount } = useSelector(
     (s: RootState) => s.notification
@@ -52,7 +56,7 @@ const NotificationsScreen: React.FC<any> = ({ navigation }) => {
       />
       <View style={styles.body}>
         {loading && notifications.length === 0 ? (
-          <ActivityIndicator style={{ marginTop: spacing(10) }} color={colors.primary} />
+          <ActivityIndicator style={{ marginTop: spacing(10) }} color={c.primary} />
         ) : notifications.length === 0 ? (
           <EmptyState icon="bell-sleep-outline" title="No notifications yet" />
         ) : (
@@ -66,14 +70,14 @@ const NotificationsScreen: React.FC<any> = ({ navigation }) => {
                 <MaterialCommunityIcons
                   name={iconFor(n.type)}
                   size={26}
-                  color={n.is_read ? colors.muted : colors.primary}
+                  color={n.is_read ? c.muted : c.primary}
                 />
                 <View style={styles.content}>
                   <Text style={styles.title}>{n.title}</Text>
                   <Text style={styles.message}>{n.message}</Text>
                   <Text style={styles.time}>{timeAgo(n.created_at)}</Text>
                 </View>
-                {!n.is_read && <Badge style={{ backgroundColor: colors.primary }} size={10} />}
+                {!n.is_read && <Badge style={{ backgroundColor: c.primary }} size={10} />}
               </Card.Content>
             </Card>
           ))
@@ -83,15 +87,16 @@ const NotificationsScreen: React.FC<any> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Pal) =>
+  StyleSheet.create({
   body: { padding: spacing(4) },
-  card: { marginBottom: spacing(3), backgroundColor: colors.card },
-  unread: { backgroundColor: '#EEF2FF' },
+  card: { marginBottom: spacing(3), backgroundColor: c.card },
+  unread: { backgroundColor: c.cardAlt },
   row: { flexDirection: 'row', alignItems: 'flex-start' },
   content: { flex: 1, marginLeft: spacing(3) },
-  title: { fontSize: 15, fontWeight: '700', color: colors.text },
-  message: { fontSize: 13, color: colors.muted, marginTop: 2 },
-  time: { fontSize: 11, color: colors.muted, marginTop: 4 },
+  title: { fontSize: 15, fontWeight: '700', color: c.text },
+  message: { fontSize: 13, color: c.muted, marginTop: 2 },
+  time: { fontSize: 11, color: c.muted, marginTop: 4 },
 });
 
 export default NotificationsScreen;

@@ -5,11 +5,15 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
-import { colors, spacing } from '../../theme';
+import { useAppColors, spacing } from '../../theme';
 import { AppDispatch, RootState } from '../../store';
 import { requestOTP, verifyOTP, clearError } from '../../store/slices/authSlice';
 
+type Pal = ReturnType<typeof useAppColors>;
+
 const OTPScreen: React.FC<any> = ({ navigation, route }) => {
+  const c = useAppColors();
+  const styles = React.useMemo(() => makeStyles(c), [c]);
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error } = useSelector((s: RootState) => s.auth);
   const [phone, setPhone] = useState(route.params?.phone ?? '');
@@ -39,7 +43,7 @@ const OTPScreen: React.FC<any> = ({ navigation, route }) => {
         <MaterialCommunityIcons
           name="message-lock"
           size={48}
-          color={colors.primary}
+          color={c.primary}
           style={styles.icon}
         />
 
@@ -106,11 +110,12 @@ const OTPScreen: React.FC<any> = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Pal) =>
+  StyleSheet.create({
   body: { padding: spacing(4) },
   icon: { alignSelf: 'center', marginVertical: spacing(6) },
-  input: { marginBottom: spacing(3), backgroundColor: colors.card },
-  hint: { color: colors.muted, fontSize: 12, marginBottom: spacing(2) },
+  input: { marginBottom: spacing(3), backgroundColor: c.card },
+  hint: { color: c.muted, fontSize: 12, marginBottom: spacing(2) },
   button: { marginTop: spacing(2), paddingVertical: spacing(1) },
 });
 

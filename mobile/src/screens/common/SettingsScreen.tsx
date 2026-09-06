@@ -4,11 +4,13 @@ import { List, Card, Divider, Switch, Button, Text } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
-import { colors, spacing } from '../../theme';
+import { useAppColors, spacing } from '../../theme';
 import { AppDispatch, RootState } from '../../store';
 import { setTheme } from '../../store/slices/guiSlice';
 import { logout } from '../../store/slices/authSlice';
 import api from '../../services/api';
+
+type Pal = ReturnType<typeof useAppColors>;
 
 const confirm = (title: string, message: string, onYes: () => void) => {
   if (Platform.OS === 'web') {
@@ -23,6 +25,8 @@ const confirm = (title: string, message: string, onYes: () => void) => {
 };
 
 const SettingsScreen: React.FC<any> = ({ navigation }) => {
+  const c = useAppColors();
+  const styles = React.useMemo(() => makeStyles(c), [c]);
   const dispatch = useDispatch<AppDispatch>();
   const theme = useSelector((s: RootState) => s.gui.theme);
   const [working, setWorking] = useState(false);
@@ -50,7 +54,7 @@ const SettingsScreen: React.FC<any> = ({ navigation }) => {
         <Card style={styles.card}>
           <List.Item
             title="Dark theme"
-            description="Applies on next launch"
+            description={theme === 'dark' ? 'On' : 'Off'}
             left={(p) => <List.Icon {...p} icon="theme-light-dark" />}
             right={() => (
               <Switch
@@ -81,7 +85,7 @@ const SettingsScreen: React.FC<any> = ({ navigation }) => {
           <Card.Actions>
             <Button
               mode="outlined"
-              textColor={colors.danger}
+              textColor={c.danger}
               loading={working}
               onPress={resetData}
             >
@@ -102,10 +106,11 @@ const SettingsScreen: React.FC<any> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Pal) =>
+  StyleSheet.create({
   body: { padding: spacing(4) },
-  card: { marginBottom: spacing(4), backgroundColor: colors.card },
-  muted: { color: colors.muted, fontSize: 13 },
+  card: { marginBottom: spacing(4), backgroundColor: c.card },
+  muted: { color: c.muted, fontSize: 13 },
 });
 
 export default SettingsScreen;

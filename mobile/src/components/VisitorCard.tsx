@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Card, Avatar } from 'react-native-paper';
+import { Card, Avatar, Tooltip } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import StatusPill from './StatusPill';
-import { colors, spacing } from '../theme';
+import { useAppColors, spacing } from '../theme';
 import { smartDate } from '../utils/format';
 
 const typeIcon: Record<string, keyof typeof MaterialCommunityIcons.glyphMap> = {
@@ -29,23 +29,25 @@ const VisitorCard: React.FC<{ visitor: VisitorLike; onPress?: () => void }> = ({
   visitor,
   onPress,
 }) => {
+  const c = useAppColors();
   const name = visitor.name || visitor.visitor_name || 'Visitor';
-  return (
-    <Card style={styles.card} onPress={onPress}>
+
+  const body = (
+    <Card style={[styles.card, { backgroundColor: c.card }]} onPress={onPress}>
       <Card.Content style={styles.row}>
         <Avatar.Icon
           size={44}
           icon={typeIcon[visitor.type || 'guest'] || 'account'}
-          style={styles.avatar}
+          style={{ backgroundColor: c.primary }}
           color="#fff"
         />
         <View style={styles.info}>
-          <Text style={styles.name}>{name}</Text>
-          <Text style={styles.meta}>
+          <Text style={[styles.name, { color: c.text }]}>{name}</Text>
+          <Text style={[styles.meta, { color: c.muted }]}>
             {visitor.flat}
             {visitor.purpose ? ` • ${visitor.purpose}` : ''}
           </Text>
-          <Text style={styles.time}>
+          <Text style={[styles.time, { color: c.muted }]}>
             {smartDate(visitor.entry_time || visitor.requested_at)}
           </Text>
         </View>
@@ -53,16 +55,17 @@ const VisitorCard: React.FC<{ visitor: VisitorLike; onPress?: () => void }> = ({
       </Card.Content>
     </Card>
   );
+
+  return onPress ? <Tooltip title="View details">{body}</Tooltip> : body;
 };
 
 const styles = StyleSheet.create({
-  card: { marginBottom: spacing(3), backgroundColor: colors.card },
+  card: { marginBottom: spacing(3) },
   row: { flexDirection: 'row', alignItems: 'center' },
-  avatar: { backgroundColor: colors.primary },
   info: { flex: 1, marginLeft: spacing(3) },
-  name: { fontSize: 15, fontWeight: '700', color: colors.text },
-  meta: { fontSize: 13, color: colors.muted, marginTop: 2 },
-  time: { fontSize: 11, color: colors.muted, marginTop: 2 },
+  name: { fontSize: 15, fontWeight: '700' },
+  meta: { fontSize: 13, marginTop: 2 },
+  time: { fontSize: 11, marginTop: 2 },
 });
 
 export default VisitorCard;

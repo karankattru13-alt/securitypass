@@ -6,22 +6,28 @@ import { useFocusEffect } from '@react-navigation/native';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
 import StatusPill from '../../components/StatusPill';
-import { colors, spacing, radius } from '../../theme';
+import { useAppColors, spacing, radius } from '../../theme';
 import { smartDate } from '../../utils/format';
 import api from '../../services/api';
 
-const Row = ({ icon, label, value }: any) => (
-  <View style={styles.row}>
-    <MaterialCommunityIcons name={icon} size={18} color={colors.muted} />
-    <Text style={styles.rowLabel}>{label}</Text>
-    <Text style={styles.rowValue}>{value || '—'}</Text>
-  </View>
-);
+type Pal = ReturnType<typeof useAppColors>;
+
 
 const notify = (msg: string) =>
   Platform.OS === 'web' ? window.alert(msg) : Alert.alert('SocietyPass', msg);
 
 const VisitorDetailsScreen: React.FC<any> = ({ navigation, route }) => {
+  const c = useAppColors();
+  const styles = React.useMemo(() => makeStyles(c), [c]);
+
+  const Row = ({ icon, label, value }: any) => (
+    <View style={styles.row}>
+      <MaterialCommunityIcons name={icon} size={18} color={c.muted} />
+      <Text style={styles.rowLabel}>{label}</Text>
+      <Text style={styles.rowValue}>{value || '—'}</Text>
+    </View>
+  );
+
   const visitorId: number = route.params?.visitorId;
   const [visitor, setVisitor] = useState<any>(null);
   const [busy, setBusy] = useState(false);
@@ -56,7 +62,7 @@ const VisitorDetailsScreen: React.FC<any> = ({ navigation, route }) => {
   if (!visitor) {
     return (
       <Screen>
-        <ActivityIndicator style={{ marginTop: spacing(12) }} color={colors.primary} />
+        <ActivityIndicator style={{ marginTop: spacing(12) }} color={c.primary} />
       </Screen>
     );
   }
@@ -66,7 +72,7 @@ const VisitorDetailsScreen: React.FC<any> = ({ navigation, route }) => {
       <AppHeader
         title="Visitor Details"
         subtitle={visitor.name}
-        color={colors.guard}
+        color={c.guard}
         onBack={() => navigation.goBack()}
       />
       <View style={styles.body}>
@@ -100,7 +106,7 @@ const VisitorDetailsScreen: React.FC<any> = ({ navigation, route }) => {
           <Button
             mode="contained"
             icon="clipboard-check-outline"
-            buttonColor={colors.guard}
+            buttonColor={c.guard}
             onPress={() => navigation.navigate('VisitorApproval', { visitorId })}
             style={styles.action}
           >
@@ -111,7 +117,7 @@ const VisitorDetailsScreen: React.FC<any> = ({ navigation, route }) => {
           <Button
             mode="contained"
             icon="login-variant"
-            buttonColor={colors.success}
+            buttonColor={c.success}
             loading={busy}
             disabled={busy}
             onPress={() => run(() => api.markVisitorEntered(visitorId), 'Entry recorded.')}
@@ -124,7 +130,7 @@ const VisitorDetailsScreen: React.FC<any> = ({ navigation, route }) => {
           <Button
             mode="contained"
             icon="logout-variant"
-            buttonColor={colors.info}
+            buttonColor={c.info}
             loading={busy}
             disabled={busy}
             onPress={() => run(() => api.markVisitorExited(visitorId), 'Exit recorded.')}
@@ -148,24 +154,25 @@ const VisitorDetailsScreen: React.FC<any> = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Pal) =>
+  StyleSheet.create({
   body: { padding: spacing(4) },
-  card: { backgroundColor: colors.card, marginBottom: spacing(4) },
+  card: { backgroundColor: c.card, marginBottom: spacing(4) },
   head: { flexDirection: 'row', marginBottom: spacing(3) },
-  avatar: { width: 72, height: 72, borderRadius: radius.md, backgroundColor: colors.border },
-  avatarFallback: { backgroundColor: colors.guard, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 72, height: 72, borderRadius: radius.md, backgroundColor: c.border },
+  avatarFallback: { backgroundColor: c.guard, alignItems: 'center', justifyContent: 'center' },
   headInfo: { flex: 1, marginLeft: spacing(3), justifyContent: 'center' },
-  name: { fontSize: 18, fontWeight: '800', color: colors.text },
-  sub: { fontSize: 13, color: colors.muted, marginTop: 2, marginBottom: spacing(2) },
+  name: { fontSize: 18, fontWeight: '800', color: c.text },
+  sub: { fontSize: 13, color: c.muted, marginTop: 2, marginBottom: spacing(2) },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: spacing(2),
     borderTopWidth: 1,
-    borderTopColor: colors.border,
+    borderTopColor: c.border,
   },
-  rowLabel: { marginLeft: spacing(2), color: colors.muted, width: 90, fontSize: 13 },
-  rowValue: { flex: 1, color: colors.text, fontSize: 14, fontWeight: '600' },
+  rowLabel: { marginLeft: spacing(2), color: c.muted, width: 90, fontSize: 13 },
+  rowValue: { flex: 1, color: c.text, fontSize: 14, fontWeight: '600' },
   action: { marginBottom: spacing(3) },
 });
 

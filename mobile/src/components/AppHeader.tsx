@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Tooltip } from 'react-native-paper';
 import { useDispatch } from 'react-redux';
-import { colors, spacing } from '../theme';
+import { useAppColors, spacing } from '../theme';
 import { AppDispatch } from '../store';
 import { logout } from '../store/slices/authSlice';
 
@@ -33,20 +34,24 @@ export const confirmSignOut = (onYes: () => void) => {
 const AppHeader: React.FC<Props> = ({
   title,
   subtitle,
-  color = colors.primary,
+  color,
   icon,
   onBack,
   right,
   hideLogout,
 }) => {
+  const c = useAppColors();
   const dispatch = useDispatch<AppDispatch>();
+  const bg = color ?? c.primary;
 
   return (
-    <View style={[styles.header, { backgroundColor: color }]}>
+    <View style={[styles.header, { backgroundColor: bg }]}>
       {onBack ? (
-        <TouchableOpacity onPress={onBack} style={styles.backBtn} hitSlop={12}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />
-        </TouchableOpacity>
+        <Tooltip title="Back">
+          <TouchableOpacity onPress={onBack} style={styles.backBtn} hitSlop={12}>
+            <MaterialCommunityIcons name="arrow-left" size={24} color="#fff" />
+          </TouchableOpacity>
+        </Tooltip>
       ) : null}
       <View style={styles.textWrap}>
         <Text style={styles.title}>{title}</Text>
@@ -54,14 +59,16 @@ const AppHeader: React.FC<Props> = ({
       </View>
       {right ?? (icon ? <MaterialCommunityIcons name={icon} size={28} color="#fff" /> : null)}
       {!hideLogout ? (
-        <TouchableOpacity
-          onPress={() => confirmSignOut(() => dispatch(logout()))}
-          style={styles.logoutBtn}
-          hitSlop={12}
-          accessibilityLabel="Sign out"
-        >
-          <MaterialCommunityIcons name="logout" size={22} color="#fff" />
-        </TouchableOpacity>
+        <Tooltip title="Sign out">
+          <TouchableOpacity
+            onPress={() => confirmSignOut(() => dispatch(logout()))}
+            style={styles.logoutBtn}
+            hitSlop={12}
+            accessibilityLabel="Sign out"
+          >
+            <MaterialCommunityIcons name="logout" size={22} color="#fff" />
+          </TouchableOpacity>
+        </Tooltip>
       ) : null}
     </View>
   );

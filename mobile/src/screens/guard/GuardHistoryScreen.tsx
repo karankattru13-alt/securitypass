@@ -6,8 +6,10 @@ import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
 import VisitorCard from '../../components/VisitorCard';
 import EmptyState from '../../components/EmptyState';
-import { colors, spacing } from '../../theme';
+import { useAppColors, spacing } from '../../theme';
 import api from '../../services/api';
+
+type Pal = ReturnType<typeof useAppColors>;
 
 const FILTERS = [
   { key: 'all', label: 'All' },
@@ -18,6 +20,8 @@ const FILTERS = [
 ];
 
 const GuardHistoryScreen: React.FC<any> = ({ navigation }) => {
+  const c = useAppColors();
+  const styles = React.useMemo(() => makeStyles(c), [c]);
   const [visitors, setVisitors] = useState<any[]>([]);
   const [filter, setFilter] = useState('all');
   const [query, setQuery] = useState('');
@@ -56,7 +60,7 @@ const GuardHistoryScreen: React.FC<any> = ({ navigation }) => {
 
   return (
     <Screen padded={false} refreshing={refreshing} onRefresh={load}>
-      <AppHeader title="Visitor History" color={colors.guard} icon="history" />
+      <AppHeader title="Visitor History" color={c.guard} icon="history" />
       <View style={styles.body}>
         <Searchbar
           placeholder="Search name, flat or phone"
@@ -83,7 +87,7 @@ const GuardHistoryScreen: React.FC<any> = ({ navigation }) => {
         </ScrollView>
 
         {loading ? (
-          <ActivityIndicator style={{ marginTop: spacing(10) }} color={colors.primary} />
+          <ActivityIndicator style={{ marginTop: spacing(10) }} color={c.primary} />
         ) : filtered.length === 0 ? (
           <EmptyState icon="account-search-outline" title="No visitors match" />
         ) : (
@@ -100,9 +104,10 @@ const GuardHistoryScreen: React.FC<any> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Pal) =>
+  StyleSheet.create({
   body: { padding: spacing(4) },
-  search: { marginBottom: spacing(3), backgroundColor: colors.card },
+  search: { marginBottom: spacing(3), backgroundColor: c.card },
   chips: { paddingBottom: spacing(3) },
   chip: { marginRight: spacing(2) },
 });

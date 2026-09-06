@@ -5,10 +5,14 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
-import { colors, spacing, radius } from '../../theme';
+import { useAppColors, spacing, radius } from '../../theme';
 import api from '../../services/api';
 
+type Pal = ReturnType<typeof useAppColors>;
+
 const VisitorPhotoScreen: React.FC<any> = ({ navigation, route }) => {
+  const c = useAppColors();
+  const styles = React.useMemo(() => makeStyles(c), [c]);
   const visitorId: number = route.params?.visitorId;
   const [uri, setUri] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +54,7 @@ const VisitorPhotoScreen: React.FC<any> = ({ navigation, route }) => {
       <AppHeader
         title="Visitor Photo"
         subtitle="Capture for the entry record"
-        color={colors.guard}
+        color={c.guard}
         onBack={() => navigation.goBack()}
       />
       <View style={styles.body}>
@@ -59,7 +63,7 @@ const VisitorPhotoScreen: React.FC<any> = ({ navigation, route }) => {
             <Image source={{ uri }} style={styles.image} resizeMode="cover" />
           ) : (
             <View style={styles.placeholder}>
-              <MaterialCommunityIcons name="camera-outline" size={56} color={colors.muted} />
+              <MaterialCommunityIcons name="camera-outline" size={56} color={c.muted} />
               <Text style={styles.placeholderText}>No photo captured</Text>
             </View>
           )}
@@ -93,7 +97,7 @@ const VisitorPhotoScreen: React.FC<any> = ({ navigation, route }) => {
           onPress={proceed}
           loading={busy}
           disabled={busy}
-          buttonColor={colors.guard}
+          buttonColor={c.guard}
           style={styles.next}
         >
           {uri ? 'Save & Continue' : 'Skip Photo'}
@@ -103,20 +107,21 @@ const VisitorPhotoScreen: React.FC<any> = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Pal) =>
+  StyleSheet.create({
   body: { padding: spacing(4) },
   preview: {
     height: 300,
     borderRadius: radius.lg,
     overflow: 'hidden',
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
     marginBottom: spacing(4),
   },
   image: { width: '100%', height: '100%' },
   placeholder: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  placeholderText: { color: colors.muted, marginTop: spacing(2) },
+  placeholderText: { color: c.muted, marginTop: spacing(2) },
   action: { marginBottom: spacing(3) },
   next: { marginTop: spacing(2), paddingVertical: spacing(1) },
 });

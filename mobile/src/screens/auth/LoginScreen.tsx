@@ -4,9 +4,11 @@ import { TextInput, Button, HelperText, Card } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import Screen from '../../components/Screen';
-import { colors, spacing } from '../../theme';
+import { useAppColors, spacing } from '../../theme';
 import { AppDispatch, RootState } from '../../store';
 import { login, clearError } from '../../store/slices/authSlice';
+
+type Pal = ReturnType<typeof useAppColors>;
 
 const DEMO = [
   { label: 'Guard', phone: '9000000001' },
@@ -15,6 +17,8 @@ const DEMO = [
 ];
 
 const LoginScreen: React.FC<any> = ({ navigation }) => {
+  const c = useAppColors();
+  const styles = React.useMemo(() => makeStyles(c), [c]);
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error } = useSelector((s: RootState) => s.auth);
   const [phone, setPhone] = useState('9000000002');
@@ -30,7 +34,7 @@ const LoginScreen: React.FC<any> = ({ navigation }) => {
     <Screen>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.brand}>
-          <MaterialCommunityIcons name="shield-home" size={56} color={colors.primary} />
+          <MaterialCommunityIcons name="shield-home" size={56} color={c.primary} />
           <Text style={styles.title}>SocietyPass</Text>
           <Text style={styles.subtitle}>Sign in to continue</Text>
         </View>
@@ -93,7 +97,7 @@ const LoginScreen: React.FC<any> = ({ navigation }) => {
           <Button
             mode="text"
             compact
-            textColor={colors.guard}
+            textColor={c.guard}
             onPress={() => navigation.navigate('Register', { role: 'guard' })}
           >
             Guard sign-up
@@ -123,18 +127,19 @@ const LoginScreen: React.FC<any> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Pal) =>
+  StyleSheet.create({
   brand: { alignItems: 'center', marginTop: spacing(8), marginBottom: spacing(6) },
-  title: { fontSize: 26, fontWeight: '800', color: colors.text, marginTop: spacing(2) },
-  subtitle: { fontSize: 14, color: colors.muted, marginTop: 2 },
-  input: { marginBottom: spacing(3), backgroundColor: colors.card },
+  title: { fontSize: 26, fontWeight: '800', color: c.text, marginTop: spacing(2) },
+  subtitle: { fontSize: 14, color: c.muted, marginTop: 2 },
+  input: { marginBottom: spacing(3), backgroundColor: c.card },
   button: { marginTop: spacing(2), paddingVertical: spacing(1) },
   linkBtn: { marginTop: spacing(2) },
   signupRow: { flexDirection: 'row', justifyContent: 'center', flexWrap: 'wrap' },
-  demoCard: { marginTop: spacing(6), backgroundColor: '#EEF2FF' },
-  demoTitle: { fontWeight: '700', color: colors.text, marginBottom: spacing(2) },
-  demoRow: { color: colors.primary, paddingVertical: 3, fontWeight: '600' },
-  demoHint: { color: colors.muted, marginTop: spacing(2), fontSize: 12 },
+  demoCard: { marginTop: spacing(6), backgroundColor: c.cardAlt },
+  demoTitle: { fontWeight: '700', color: c.text, marginBottom: spacing(2) },
+  demoRow: { color: c.primary, paddingVertical: 3, fontWeight: '600' },
+  demoHint: { color: c.muted, marginTop: spacing(2), fontSize: 12 },
 });
 
 export default LoginScreen;

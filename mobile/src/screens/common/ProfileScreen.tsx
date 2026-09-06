@@ -13,12 +13,16 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
-import { colors, spacing, roleColor, prettyStatus } from '../../theme';
+import { useAppColors, spacing, roleColor, prettyStatus } from '../../theme';
 import { initials } from '../../utils/format';
 import { AppDispatch, RootState } from '../../store';
 import { logout, updateProfile } from '../../store/slices/authSlice';
 
+type Pal = ReturnType<typeof useAppColors>;
+
 const ProfileScreen: React.FC<any> = ({ navigation }) => {
+  const c = useAppColors();
+  const styles = React.useMemo(() => makeStyles(c), [c]);
   const dispatch = useDispatch<AppDispatch>();
   const { user, loading } = useSelector((s: RootState) => s.auth);
   const unread = useSelector((s: RootState) => s.notification.unreadCount);
@@ -26,7 +30,7 @@ const ProfileScreen: React.FC<any> = ({ navigation }) => {
   const [flatInput, setFlatInput] = useState('');
 
   if (!user) return null;
-  const accent = roleColor(user.role);
+  const accent = roleColor(user.role, c);
   const isResident = user.role === 'resident' || user.role === 'staff';
 
   const openEdit = () => {
@@ -101,7 +105,7 @@ const ProfileScreen: React.FC<any> = ({ navigation }) => {
 
         <Button
           mode="contained"
-          buttonColor={colors.danger}
+          buttonColor={c.danger}
           icon="logout"
           style={styles.logout}
           onPress={() => dispatch(logout())}
@@ -139,13 +143,14 @@ const ProfileScreen: React.FC<any> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Pal) =>
+  StyleSheet.create({
   body: { padding: spacing(4) },
-  card: { marginBottom: spacing(4), backgroundColor: colors.card },
+  card: { marginBottom: spacing(4), backgroundColor: c.card },
   userRow: { flexDirection: 'row', alignItems: 'center' },
   userInfo: { marginLeft: spacing(4), flex: 1 },
-  name: { fontSize: 18, fontWeight: '800', color: colors.text },
-  meta: { fontSize: 13, color: colors.muted, marginTop: 2 },
+  name: { fontSize: 18, fontWeight: '800', color: c.text },
+  meta: { fontSize: 13, color: c.muted, marginTop: 2 },
   role: { fontSize: 13, fontWeight: '700', marginTop: 4 },
   logout: { marginTop: spacing(2) },
 });

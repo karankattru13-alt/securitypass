@@ -5,10 +5,22 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
-import { colors, spacing } from '../../theme';
+import { useAppColors, spacing } from '../../theme';
 import api from '../../services/api';
 
+type Pal = ReturnType<typeof useAppColors>;
+
 const AdminSocietyScreen: React.FC = () => {
+  const c = useAppColors();
+  const styles = React.useMemo(() => makeStyles(c), [c]);
+
+  const Row = ({ icon, text }: any) => (
+    <View style={styles.row}>
+      <MaterialCommunityIcons name={icon} size={18} color={c.admin} />
+      <Text style={styles.rowText}>{text}</Text>
+    </View>
+  );
+
   const [society, setSociety] = useState<any>(null);
   const [flats, setFlats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,7 +48,7 @@ const AdminSocietyScreen: React.FC = () => {
   if (loading) {
     return (
       <Screen>
-        <ActivityIndicator style={{ marginTop: spacing(12) }} color={colors.admin} />
+        <ActivityIndicator style={{ marginTop: spacing(12) }} color={c.admin} />
       </Screen>
     );
   }
@@ -46,7 +58,7 @@ const AdminSocietyScreen: React.FC = () => {
 
   return (
     <Screen padded={false} refreshing={refreshing} onRefresh={load}>
-      <AppHeader title="Society" subtitle={society?.name} color={colors.admin} icon="home-city" />
+      <AppHeader title="Society" subtitle={society?.name} color={c.admin} icon="home-city" />
       <View style={styles.body}>
         <Card style={styles.card}>
           <Card.Content>
@@ -88,18 +100,13 @@ const AdminSocietyScreen: React.FC = () => {
   );
 };
 
-const Row = ({ icon, text }: any) => (
-  <View style={styles.row}>
-    <MaterialCommunityIcons name={icon} size={18} color={colors.admin} />
-    <Text style={styles.rowText}>{text}</Text>
-  </View>
-);
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Pal) =>
+  StyleSheet.create({
   body: { padding: spacing(4) },
-  card: { backgroundColor: colors.card, marginBottom: spacing(4) },
+  card: { backgroundColor: c.card, marginBottom: spacing(4) },
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing(2) },
-  rowText: { marginLeft: spacing(2), color: colors.text, fontSize: 14, flex: 1 },
+  rowText: { marginLeft: spacing(2), color: c.text, fontSize: 14, flex: 1 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: spacing(3) },
   chip: { marginRight: spacing(2), marginBottom: spacing(2) },
 });

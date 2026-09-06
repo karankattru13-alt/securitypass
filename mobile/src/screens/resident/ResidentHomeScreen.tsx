@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Card, Button, ActivityIndicator } from 'react-native-paper';
+import { Card, Button, ActivityIndicator, Tooltip } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
 import { useFocusEffect } from '@react-navigation/native';
@@ -8,10 +8,12 @@ import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
 import VisitorCard from '../../components/VisitorCard';
 import EmptyState from '../../components/EmptyState';
-import { colors, spacing, radius } from '../../theme';
+import { useAppColors, spacing, radius } from '../../theme';
 import { timeAgo } from '../../utils/format';
 import { RootState } from '../../store';
 import api from '../../services/api';
+
+type Pal = ReturnType<typeof useAppColors>;
 
 const QUICK = [
   { key: 'VisitorRequest', label: 'Expect Guest', icon: 'account-plus' },
@@ -20,6 +22,8 @@ const QUICK = [
 ];
 
 const ResidentHomeScreen: React.FC<any> = ({ navigation }) => {
+  const c = useAppColors();
+  const styles = React.useMemo(() => makeStyles(c), [c]);
   const { user } = useSelector((s: RootState) => s.auth);
   const unread = useSelector((s: RootState) => s.notification.unreadCount);
   const [pending, setPending] = useState<any[]>([]);
@@ -72,23 +76,29 @@ const ResidentHomeScreen: React.FC<any> = ({ navigation }) => {
       <AppHeader
         title={`Hi, ${user?.first_name ?? 'Resident'}`}
         subtitle={user?.flat ? `Flat ${user.flat}` : 'Welcome back'}
-        color={colors.resident}
+        color={c.resident}
         right={
-          <TouchableOpacity onPress={() => navigation.navigate('Notifications')} hitSlop={12}>
-            <MaterialCommunityIcons name="bell-outline" size={26} color="#fff" />
-            {unread > 0 && <View style={styles.dot} />}
-          </TouchableOpacity>
+          <Tooltip title={unread > 0 ? `Notifications (${unread} unread)` : 'Notifications'}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Notifications')}
+              hitSlop={12}
+              accessibilityLabel="Notifications"
+            >
+              <MaterialCommunityIcons name="bell-outline" size={26} color="#fff" />
+              {unread > 0 && <View style={styles.dot} />}
+            </TouchableOpacity>
+          </Tooltip>
         }
       />
       <View style={styles.body}>
         {!user?.flat && (
           <Card style={styles.flatPrompt} onPress={() => navigation.navigate('Profile')}>
             <Card.Content style={styles.flatPromptRow}>
-              <MaterialCommunityIcons name="home-alert" size={24} color={colors.warning} />
+              <MaterialCommunityIcons name="home-alert" size={24} color={c.warning} />
               <Text style={styles.flatPromptText}>
                 Add your house / flat number so guards can send visitor requests to you.
               </Text>
-              <MaterialCommunityIcons name="chevron-right" size={22} color={colors.muted} />
+              <MaterialCommunityIcons name="chevron-right" size={22} color={c.muted} />
             </Card.Content>
           </Card>
         )}
@@ -100,7 +110,7 @@ const ResidentHomeScreen: React.FC<any> = ({ navigation }) => {
               style={styles.quick}
               onPress={() => navigation.navigate(q.key)}
             >
-              <MaterialCommunityIcons name={q.icon as any} size={28} color={colors.resident} />
+              <MaterialCommunityIcons name={q.icon as any} size={28} color={c.resident} />
               <Text style={styles.quickLabel}>{q.label}</Text>
             </TouchableOpacity>
           ))}
@@ -108,7 +118,7 @@ const ResidentHomeScreen: React.FC<any> = ({ navigation }) => {
 
         <Text style={styles.section}>Waiting for your approval</Text>
         {loading ? (
-          <ActivityIndicator color={colors.resident} style={{ marginVertical: spacing(6) }} />
+          <ActivityIndicator color={c.resident} style={{ marginVertical: spacing(6) }} />
         ) : pending.length === 0 ? (
           <EmptyState icon="check-all" title="Nothing pending" message="Visitors at the gate will show up here." />
         ) : (
@@ -123,7 +133,7 @@ const ResidentHomeScreen: React.FC<any> = ({ navigation }) => {
                   <Button
                     mode="contained"
                     compact
-                    buttonColor={colors.success}
+                    buttonColor={c.success}
                     loading={busyId === v.id}
                     disabled={busyId === v.id}
                     onPress={() => decide(v.id, true)}
@@ -134,7 +144,7 @@ const ResidentHomeScreen: React.FC<any> = ({ navigation }) => {
                   <Button
                     mode="contained"
                     compact
-                    buttonColor={colors.danger}
+                    buttonColor={c.danger}
                     loading={busyId === v.id}
                     disabled={busyId === v.id}
                     onPress={() => decide(v.id, false)}
@@ -175,7 +185,8 @@ const ResidentHomeScreen: React.FC<any> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (c: Pal) =>
+  StyleSheet.create({
   body: { padding: spacing(4) },
   dot: {
     position: 'absolute',
@@ -184,39 +195,39 @@ const styles = StyleSheet.create({
     width: 9,
     height: 9,
     borderRadius: 5,
-    backgroundColor: colors.warning,
+    backgroundColor: c.warning,
   },
-  flatPrompt: { backgroundColor: '#FFF7ED', marginBottom: spacing(4) },
+  flatPrompt: { backgroundColor: c.cardAlt, marginBottom: spacing(4) },
   flatPromptRow: { flexDirection: 'row', alignItems: 'center' },
   flatPromptText: {
     flex: 1,
     marginHorizontal: spacing(3),
     fontSize: 13,
-    color: colors.text,
+    color: c.text,
     fontWeight: '600',
   },
   quickRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing(5) },
   quick: {
     flex: 1,
-    backgroundColor: colors.card,
+    backgroundColor: c.card,
     borderRadius: radius.md,
     paddingVertical: spacing(4),
     alignItems: 'center',
     marginHorizontal: spacing(1),
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: c.border,
   },
-  quickLabel: { fontSize: 12, fontWeight: '600', color: colors.text, marginTop: spacing(2) },
+  quickLabel: { fontSize: 12, fontWeight: '600', color: c.text, marginTop: spacing(2) },
   section: {
     fontSize: 16,
     fontWeight: '800',
-    color: colors.text,
+    color: c.text,
     marginTop: spacing(3),
     marginBottom: spacing(3),
   },
-  approvalCard: { backgroundColor: '#FFF7ED', marginBottom: spacing(3) },
-  name: { fontSize: 15, fontWeight: '700', color: colors.text },
-  meta: { fontSize: 13, color: colors.muted, marginTop: 2, marginBottom: spacing(3) },
+  approvalCard: { backgroundColor: c.cardAlt, marginBottom: spacing(3) },
+  name: { fontSize: 15, fontWeight: '700', color: c.text },
+  meta: { fontSize: 13, color: c.muted, marginTop: 2, marginBottom: spacing(3) },
   approvalActions: { flexDirection: 'row', alignItems: 'center', gap: spacing(2) },
   approvalBtn: { borderRadius: radius.sm },
 });

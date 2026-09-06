@@ -1,12 +1,13 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { statusColor, prettyStatus, radius } from '../theme';
+import { useAppColors, statusColor, prettyStatus, radius } from '../theme';
 
 const StatusPill: React.FC<{ status?: string }> = ({ status }) => {
-  const c = statusColor(status);
+  const c = useAppColors();
+  const color = statusColor(status, c);
   return (
-    <View style={[styles.pill, { backgroundColor: `${c}22`, borderColor: c }]}>
-      <Text style={[styles.text, { color: c }]}>{prettyStatus(status)}</Text>
+    <View style={[styles.pill, { backgroundColor: `${color}22`, borderColor: color }]}>
+      <Text style={[styles.text, { color }]}>{prettyStatus(status)}</Text>
     </View>
   );
 };
