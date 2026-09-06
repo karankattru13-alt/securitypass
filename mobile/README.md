@@ -63,7 +63,7 @@ mobile/
   src/
     services/
       api.ts                  real axios client + mock switch
-      mock/db.ts              seeded in-memory DB, persisted to AsyncStorage
+      mock/db.ts              local versioned DB (AsyncStorage) + forward migrations
       mock/mockClient.ts      mock implementation of every API method
     store/                    Redux Toolkit slices: auth, visitor, notification, gui
     hooks/                    useAuth, useNotifications
@@ -72,9 +72,22 @@ mobile/
     theme.ts, utils/format.ts
 ```
 
-### Using a real backend
+### Data persistence
 
-Set env vars (see [.env.example](.env.example)):
+Every write — sign-ups, visitors, guard duty status, pre-approved passes, theme
+preference — is saved to a local database through AsyncStorage (`localStorage` /
+IndexedDB in the browser, SQLite on native). It survives reloads and restarts on
+that device.
+
+The store is versioned (`schema_version`) under the stable key `societypass_db`.
+On load, older payloads are **migrated forward** (never wiped), and data from the
+earlier `mock_db_v*` keys is imported once. New schema changes ship as entries in
+`MIGRATIONS` in [src/services/mock/db.ts](src/services/mock/db.ts) — the key
+never changes again, so updates no longer clear your data. "Reset demo data" in
+Settings wipes back to the seed.
+
+Note: this is per-device local storage, not a shared server. For multi-device /
+shared data, point the app at a real backend:
 
 ```
 EXPO_PUBLIC_USE_MOCK=false

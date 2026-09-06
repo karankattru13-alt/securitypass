@@ -1,13 +1,25 @@
 /**
- * In-memory mock database with AsyncStorage persistence.
+ * Local database for the app.
  *
- * This lets the whole app run in a browser (or a bare simulator) with no real
- * backend. Data is seeded once, then persisted so changes survive a reload.
- * Delete the `mock_db_v1` key (or call `resetDb`) to re-seed.
+ * With no remote API configured the whole app runs against this store: it is
+ * seeded once, then every write (sign-ups, visitors, duty status, pre-approved
+ * passes, preferences, …) is persisted through AsyncStorage — `localStorage` /
+ * IndexedDB in the browser, SQLite on native — so data survives reloads and app
+ * restarts on that device.
+ *
+ * The store is versioned. On load, an older payload is *migrated forward* (never
+ * discarded), and payloads written under the old `mock_db_v*` keys are imported
+ * once. The storage key never changes again — schema changes ship as migrations
+ * in `MIGRATIONS` below. Call `resetDb()` to wipe back to the seed.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const STORAGE_KEY = 'mock_db_v4';
+/** Stable key — do not change. Evolve the schema via MIGRATIONS instead. */
+const STORAGE_KEY = 'societypass_db';
+/** Older keys imported once if the stable key is empty (newest first). */
+const LEGACY_KEYS = ['mock_db_v4', 'mock_db_v3', 'mock_db_v2', 'mock_db_v1'];
+/** Bump when adding a migration. */
+const SCHEMA_VERSION = 1;
 
 export interface MockUser {
   id: number;
@@ -115,6 +127,7 @@ export interface MockFlat {
 }
 
 export interface MockDB {
+  schema_version: number;
   seq: number;
   users: MockUser[];
   visitors: MockVisitor[];
@@ -158,6 +171,7 @@ function seed(): MockDB {
   });
 
   return {
+    schema_version: SCHEMA_VERSION,
     seq: 100,
     users: [
       {
@@ -444,19 +458,97 @@ function seed(): MockDB {
   };
 }
 
+/**
+ * Ordered, numbered schema migrations. Index i upgrades a payload from
+ * version i -> i+1. Append only; never edit a shipped migration.
+ */
+const MIGRATIONS: Array<(db: any) => void> = [
+  // (none yet — v1 is the first stable schema)
+];
+
+/** Bring any stored/legacy payload up to the current schema. Idempotent. */
+function migrate(input: any): MockDB {
+  const db: any = input && typeof input === 'object' ? input : {};
+
+  // Structural defaults (covers legacy `mock_db_v*` payloads).
+  if (!Array.isArray(db.users)) db.users = [];
+  if (!Array.isArray(db.visitors)) db.visitors = [];
+  if (!Array.isArray(db.notifications)) db.notifications = [];
+  if (!Array.isArray(db.preApproved)) db.preApproved = [];
+  if (!Array.isArray(db.qrPasses)) db.qrPasses = [];
+  if (!Array.isArray(db.flats) || db.flats.length === 0 || !db.society) {
+    const fresh = seed();
+    if (!Array.isArray(db.flats) || db.flats.length === 0) db.flats = fresh.flats;
+    if (!db.society) db.society = fresh.society;
+  }
+  if (typeof db.seq !== 'number') {
+    const maxId = [...db.users, ...db.visitors, ...db.notifications, ...db.preApproved]
+      .map((r: any) => Number(r?.id) || 0)
+      .reduce((a, b) => Math.max(a, b), 100);
+    db.seq = maxId + 1;
+  }
+
+  // Field-level defaults for records created by older app versions.
+  for (const u of db.users) {
+    if (u.role === 'guard' || u.role === 'security_supervisor') {
+      if (typeof u.on_duty !== 'boolean') u.on_duty = false;
+      if (u.duty_shift !== 'day' && u.duty_shift !== 'night') u.duty_shift = 'day';
+    }
+  }
+  for (const p of db.preApproved) {
+    if (typeof p.days !== 'number') {
+      p.days = Math.max(
+        1,
+        Math.round((+new Date(p.valid_to) - +new Date(p.valid_from)) / 86_400_000) || 1
+      );
+    }
+    if (typeof p.resident_name !== 'string') p.resident_name = '';
+    if (typeof p.admitted !== 'boolean') p.admitted = false;
+  }
+
+  // Numbered migrations.
+  let v = typeof db.schema_version === 'number' ? db.schema_version : 0;
+  while (v < SCHEMA_VERSION && MIGRATIONS[v]) {
+    MIGRATIONS[v](db);
+    v += 1;
+  }
+  db.schema_version = SCHEMA_VERSION;
+  return db as MockDB;
+}
+
 let cache: MockDB | null = null;
 
 export async function getDb(): Promise<MockDB> {
   if (cache) return cache;
+
+  // 1. Current store.
   try {
     const raw = await AsyncStorage.getItem(STORAGE_KEY);
     if (raw) {
-      cache = JSON.parse(raw) as MockDB;
+      cache = migrate(JSON.parse(raw));
+      await persist();
       return cache;
     }
   } catch {
-    // fall through to seed
+    // fall through
   }
+
+  // 2. One-time import from a legacy key (preserves earlier sign-ups).
+  for (const key of LEGACY_KEYS) {
+    try {
+      const raw = await AsyncStorage.getItem(key);
+      if (raw) {
+        cache = migrate(JSON.parse(raw));
+        await persist();
+        await AsyncStorage.removeItem(key);
+        return cache;
+      }
+    } catch {
+      // try the next key
+    }
+  }
+
+  // 3. First run.
   cache = seed();
   await persist();
   return cache;
