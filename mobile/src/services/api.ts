@@ -222,6 +222,26 @@ class APIClient {
     return this.client.post('/guards/check-out/');
   }
 
+  async getGuards() {
+    return this.client.get('/guards/');
+  }
+
+  async getOnDutyGuards() {
+    return this.client.get('/guards/on-duty/');
+  }
+
+  async setMyDuty(onDuty: boolean) {
+    return this.client.post('/guards/duty/', { on_duty: onDuty });
+  }
+
+  async setGuardDuty(guardId: number, onDuty: boolean) {
+    return this.client.post(`/guards/${guardId}/duty/`, { on_duty: onDuty });
+  }
+
+  async getMyGuardRecords() {
+    return this.client.get('/guards/my-records/');
+  }
+
   // Generic error handler
   getErrorMessage(error: any): string {
     if (error.response?.data?.detail) {

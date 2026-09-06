@@ -89,7 +89,17 @@ const VisitorDetailsScreen: React.FC<any> = ({ navigation, route }) => {
             <Row icon="phone" label="Phone" value={visitor.phone} />
             <Row icon="shape-outline" label="Type" value={visitor.type} />
             <Row icon="car" label="Vehicle" value={visitor.vehicle_number} />
+            {visitor.created_by_name ? (
+              <Row icon="shield-account" label="Opened by" value={visitor.created_by_name} />
+            ) : null}
             <Row icon="clock-outline" label="Requested" value={smartDate(visitor.requested_at)} />
+            {visitor.approved_by_name ? (
+              <Row
+                icon="gavel"
+                label="Decided by"
+                value={`${visitor.approved_by_name} (${visitor.approval_status})`}
+              />
+            ) : null}
             <Row icon="login-variant" label="Entered" value={smartDate(visitor.entry_time)} />
             <Row icon="logout-variant" label="Exited" value={smartDate(visitor.exit_time)} />
             {visitor.remarks ? (

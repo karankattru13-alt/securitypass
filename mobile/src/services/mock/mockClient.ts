@@ -152,6 +152,8 @@ class MockAPIClient {
       entry_time: null,
       exit_time: null,
       created_by: me?.id,
+      created_by_name:
+        me && !createdByResident ? `${me.first_name} ${me.last_name}` : undefined,
       requested_by: createdByResident ? me?.id : undefined,
     };
     db.visitors.unshift(visitor);
@@ -279,20 +281,36 @@ class MockAPIClient {
 
   async approveVisitor(visitorId: number, remarks?: string) {
     await delay();
+    const me = await currentUser();
+    const who = me ? `${me.first_name} ${me.last_name}` : 'Resident';
     const v = await this.setVisitorState(
       visitorId,
-      { approval_status: 'approved', status: 'approved', remarks },
-      { title: 'Visitor approved', message: 'Entry approved by resident.', type: 'visitor_approved' }
+      {
+        approval_status: 'approved',
+        status: 'approved',
+        remarks,
+        approved_by: me?.id,
+        approved_by_name: who,
+      },
+      { title: 'Visitor approved', message: `Entry approved by ${who}.`, type: 'visitor_approved' }
     );
     return ok(v);
   }
 
   async denyVisitor(visitorId: number, remarks?: string) {
     await delay();
+    const me = await currentUser();
+    const who = me ? `${me.first_name} ${me.last_name}` : 'Resident';
     const v = await this.setVisitorState(
       visitorId,
-      { approval_status: 'denied', status: 'denied', remarks },
-      { title: 'Visitor denied', message: 'Entry denied by resident.', type: 'visitor_denied' }
+      {
+        approval_status: 'denied',
+        status: 'denied',
+        remarks,
+        approved_by: me?.id,
+        approved_by_name: who,
+      },
+      { title: 'Visitor denied', message: `Entry denied by ${who}.`, type: 'visitor_denied' }
     );
     return ok(v);
   }
@@ -320,29 +338,67 @@ class MockAPIClient {
     await delay();
     const db = await getDb();
     const me = await currentUser();
+    const validFrom = data.valid_from || new Date().toISOString();
+    const validTo =
+      data.valid_to || new Date(Date.now() + 86_400_000).toISOString();
+    const days =
+      Number(data.days) ||
+      Math.max(
+        1,
+        Math.round(
+          (+new Date(validTo) - +new Date(validFrom)) / 86_400_000
+        )
+      );
     const entry = {
       id: nextId(db),
       name: data.name || 'Guest',
       phone: data.phone || '',
       purpose: data.purpose || 'Visit',
-      valid_from: data.valid_from || new Date().toISOString(),
-      valid_to:
-        data.valid_to || new Date(Date.now() + 86_400_000).toISOString(),
+      valid_from: validFrom,
+      valid_to: validTo,
+      days,
       flat: data.flat || me?.flat || '',
+      resident_name: me ? `${me.first_name} ${me.last_name}` : '',
       created_by: me?.id ?? 0,
       status: 'active' as const,
     };
     db.preApproved.unshift(entry);
+    db.notifications.unshift({
+      id: nextId(db),
+      title: 'Pre-approved visitor added',
+      message: `${entry.name} for ${entry.flat} — valid ${days} day${
+        days === 1 ? '' : 's'
+      }.`,
+      type: 'pre_approved',
+      is_read: false,
+      created_at: new Date().toISOString(),
+      data: { preApprovedId: entry.id },
+    });
     await persist();
     return ok(entry);
+  }
+
+  /** Recompute active/expired against the clock. */
+  private withLiveStatus<T extends { valid_to: string }>(p: T) {
+    const status: 'active' | 'expired' =
+      new Date() > new Date(p.valid_to) ? 'expired' : 'active';
+    return { ...p, status };
   }
 
   async getPreApprovedVisitors() {
     await delay(140);
     const db = await getDb();
     const me = await currentUser();
-    let list = [...db.preApproved];
-    if (me?.role === 'resident') list = list.filter((p) => p.created_by === me.id);
+    let list = db.preApproved.map((p) => this.withLiveStatus(p));
+    // Residents see only their own; guards & admins see the whole society.
+    if (me?.role === 'resident' || me?.role === 'staff') {
+      list = list.filter((p) => p.created_by === me.id);
+    }
+    list.sort(
+      (a, b) =>
+        Number(a.status === 'expired') - Number(b.status === 'expired') ||
+        +new Date(b.valid_from) - +new Date(a.valid_from)
+    );
     return ok(list);
   }
 
@@ -455,13 +511,93 @@ class MockAPIClient {
   }
 
   async recordGuardCheckIn() {
-    await delay();
-    return ok({ detail: 'Checked in', at: new Date().toISOString() });
+    return this.setMyDuty(true);
   }
 
   async recordGuardCheckOut() {
-    await delay();
-    return ok({ detail: 'Checked out', at: new Date().toISOString() });
+    return this.setMyDuty(false);
+  }
+
+  // ---- Duty & guard directory ------------------------------------
+  private guardCard(u: MockUser) {
+    return {
+      id: u.id,
+      name: `${u.first_name} ${u.last_name}`.trim(),
+      first_name: u.first_name,
+      last_name: u.last_name,
+      phone: u.phone,
+      gate: u.gate || 'Main Gate',
+      shift: u.shift || 'General Shift',
+      on_duty: !!u.on_duty,
+    };
+  }
+
+  async getGuards() {
+    await delay(140);
+    const db = await getDb();
+    return ok(
+      db.users
+        .filter((u) => u.role === 'guard' || u.role === 'security_supervisor')
+        .map((u) => this.guardCard(u))
+    );
+  }
+
+  /** Guards currently on duty — visible to residents and admins. */
+  async getOnDutyGuards() {
+    await delay(120);
+    const db = await getDb();
+    return ok(
+      db.users
+        .filter(
+          (u) =>
+            (u.role === 'guard' || u.role === 'security_supervisor') && u.on_duty
+        )
+        .map((u) => this.guardCard(u))
+    );
+  }
+
+  /** The signed-in guard turns their own duty status on/off. */
+  async setMyDuty(onDuty: boolean) {
+    await delay(150);
+    const db = await getDb();
+    const me = await currentUser();
+    if (!me) throw new ApiError(401, 'Not authenticated');
+    const idx = db.users.findIndex((u) => u.id === me.id);
+    db.users[idx].on_duty = onDuty;
+    await persist();
+    return ok(this.guardCard(db.users[idx]));
+  }
+
+  /** Admin toggles a specific guard's duty status. */
+  async setGuardDuty(guardId: number, onDuty: boolean) {
+    await delay(150);
+    const db = await getDb();
+    const idx = db.users.findIndex((u) => u.id === Number(guardId));
+    if (idx === -1) throw new ApiError(404, 'Guard not found');
+    db.users[idx].on_duty = onDuty;
+    await persist();
+    return ok(this.guardCard(db.users[idx]));
+  }
+
+  /** The signed-in guard's own record: requests they opened or decided. */
+  async getMyGuardRecords() {
+    await delay(160);
+    const db = await getDb();
+    const me = await currentUser();
+    if (!me) throw new ApiError(401, 'Not authenticated');
+    const mine = db.visitors
+      .filter((v) => v.created_by === me.id || v.approved_by === me.id)
+      .map((v) => ({
+        ...v,
+        my_role:
+          v.approved_by === me.id
+            ? v.approval_status === 'denied'
+              ? 'denied'
+              : 'approved'
+            : 'created',
+      }));
+    mine.sort((a, b) => +new Date(b.requested_at) - +new Date(a.requested_at));
+    return ok(mine);
   }
 
   // ---- Misc ------------------------------------------------

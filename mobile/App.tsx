@@ -22,6 +22,8 @@ import SplashScreen from './src/screens/SplashScreen';
 
 // Guard Screens
 import GuardHomeScreen from './src/screens/guard/GuardHomeScreen';
+import GuardDutyScreen from './src/screens/guard/GuardDutyScreen';
+import GuardRecordsScreen from './src/screens/guard/GuardRecordsScreen';
 import NewVisitorScreen from './src/screens/guard/NewVisitorScreen';
 import VisitorPhotoScreen from './src/screens/guard/VisitorPhotoScreen';
 import VisitorDetailsScreen from './src/screens/guard/VisitorDetailsScreen';
@@ -71,11 +73,15 @@ const GuardNavigator = () => {
   <Tab.Navigator
     screenOptions={tabScreenOptions(c.guard, {
       GuardHome: ['home', 'home-outline'],
+      GuardDuty: ['shield-check', 'shield-off-outline'],
+      GuardRecords: ['clipboard-text', 'clipboard-text-outline'],
       GuardHistory: ['history', 'history'],
       Profile: ['account', 'account-outline'],
     })}
   >
     <Tab.Screen name="GuardHome" component={GuardHomeScreen} options={{ title: 'Home' }} />
+    <Tab.Screen name="GuardDuty" component={GuardDutyScreen} options={{ title: 'Duty' }} />
+    <Tab.Screen name="GuardRecords" component={GuardRecordsScreen} options={{ title: 'Records' }} />
     <Tab.Screen name="GuardHistory" component={GuardHistoryScreen} options={{ title: 'History' }} />
     <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
   </Tab.Navigator>

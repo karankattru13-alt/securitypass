@@ -28,6 +28,7 @@ const ResidentHomeScreen: React.FC<any> = ({ navigation }) => {
   const unread = useSelector((s: RootState) => s.notification.unreadCount);
   const [pending, setPending] = useState<any[]>([]);
   const [active, setActive] = useState<any[]>([]);
+  const [onDutyGuards, setOnDutyGuards] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [busyId, setBusyId] = useState<number | null>(null);
@@ -35,7 +36,10 @@ const ResidentHomeScreen: React.FC<any> = ({ navigation }) => {
   const load = useCallback(async () => {
     setRefreshing(true);
     try {
-      const all = await api.getVisitors();
+      const [all, guards] = await Promise.all([
+        api.getVisitors(),
+        api.getOnDutyGuards(),
+      ]);
       setPending(
         all.data.filter(
           (v: any) => v.status === 'waiting' && v.approval_status === 'pending'
@@ -44,6 +48,7 @@ const ResidentHomeScreen: React.FC<any> = ({ navigation }) => {
       setActive(
         all.data.filter((v: any) => ['approved', 'entered'].includes(v.status))
       );
+      setOnDutyGuards(guards.data);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -103,6 +108,23 @@ const ResidentHomeScreen: React.FC<any> = ({ navigation }) => {
           </Card>
         )}
 
+        <Card style={styles.dutyCard}>
+          <Card.Content style={styles.dutyRow}>
+            <MaterialCommunityIcons
+              name={onDutyGuards.length ? 'shield-check' : 'shield-off-outline'}
+              size={22}
+              color={onDutyGuards.length ? c.resident : c.muted}
+            />
+            <Text style={styles.dutyText}>
+              {onDutyGuards.length
+                ? `On duty: ${onDutyGuards
+                    .map((g) => `${g.name} (${g.gate})`)
+                    .join(', ')}`
+                : 'No guard is on duty right now'}
+            </Text>
+          </Card.Content>
+        </Card>
+
         <View style={styles.quickRow}>
           {QUICK.map((q) => (
             <TouchableOpacity
@@ -129,6 +151,12 @@ const ResidentHomeScreen: React.FC<any> = ({ navigation }) => {
                 <Text style={styles.meta}>
                   {v.purpose} • {timeAgo(v.requested_at)}
                 </Text>
+                {v.created_by_name ? (
+                  <View style={styles.byRow}>
+                    <MaterialCommunityIcons name="shield-account" size={13} color={c.guard} />
+                    <Text style={styles.byText}>Opened by {v.created_by_name}</Text>
+                  </View>
+                ) : null}
                 <View style={styles.approvalActions}>
                   <Button
                     mode="contained"
@@ -197,6 +225,11 @@ const makeStyles = (c: Pal) =>
     borderRadius: 5,
     backgroundColor: c.warning,
   },
+  dutyCard: { backgroundColor: c.card, marginBottom: spacing(4), borderWidth: 1, borderColor: c.border },
+  dutyRow: { flexDirection: 'row', alignItems: 'center', gap: spacing(2) },
+  dutyText: { flex: 1, fontSize: 12.5, color: c.text, fontWeight: '600' },
+  byRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: spacing(3) },
+  byText: { fontSize: 12, color: c.guard, fontWeight: '700' },
   flatPrompt: { backgroundColor: c.cardAlt, marginBottom: spacing(4) },
   flatPromptRow: { flexDirection: 'row', alignItems: 'center' },
   flatPromptText: {

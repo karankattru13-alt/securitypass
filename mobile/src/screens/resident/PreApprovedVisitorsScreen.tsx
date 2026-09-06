@@ -54,6 +54,7 @@ const PreApprovedVisitorsScreen: React.FC<any> = ({ navigation }) => {
         phone: phone.trim(),
         purpose: purpose.trim() || 'Regular visitor',
         flat: user?.flat,
+        days: validDays,
         valid_from: new Date().toISOString(),
         valid_to: new Date(Date.now() + validDays * 24 * 3600 * 1000).toISOString(),
       });
@@ -135,26 +136,45 @@ const PreApprovedVisitorsScreen: React.FC<any> = ({ navigation }) => {
         ) : list.length === 0 ? (
           <EmptyState icon="account-check-outline" title="No pre-approved visitors" />
         ) : (
-          list.map((p) => (
-            <Card key={p.id} style={styles.card}>
-              <Card.Content style={styles.row}>
-                <MaterialCommunityIcons
-                  name="account-check"
-                  size={28}
-                  color={c.resident}
-                />
-                <View style={styles.info}>
-                  <Text style={styles.name}>{p.name}</Text>
-                  <Text style={styles.meta}>
-                    {p.purpose}
-                    {p.phone ? ` • ${p.phone}` : ''}
-                  </Text>
-                  <Text style={styles.valid}>Valid until {smartDate(p.valid_to)}</Text>
-                </View>
-              </Card.Content>
-              <Divider />
-            </Card>
-          ))
+          list.map((p) => {
+            const expired = p.status === 'expired';
+            return (
+              <Card key={p.id} style={styles.card}>
+                <Card.Content style={styles.row}>
+                  <MaterialCommunityIcons
+                    name="account-check"
+                    size={28}
+                    color={expired ? c.muted : c.resident}
+                  />
+                  <View style={styles.info}>
+                    <Text style={styles.name}>{p.name}</Text>
+                    <Text style={styles.meta}>
+                      {p.purpose}
+                      {p.phone ? ` • ${p.phone}` : ''}
+                    </Text>
+                    <Text style={styles.valid}>
+                      Valid {p.days} day{p.days === 1 ? '' : 's'} ·{' '}
+                      {expired ? 'expired ' : 'until '}
+                      {smartDate(p.valid_to)}
+                    </Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.pill,
+                      { backgroundColor: expired ? `${c.danger}22` : `${c.success}22` },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.pillText, { color: expired ? c.danger : c.success }]}
+                    >
+                      {expired ? 'Expired' : 'Active'}
+                    </Text>
+                  </View>
+                </Card.Content>
+                <Divider />
+              </Card>
+            );
+          })
         )}
       </View>
     </Screen>
@@ -173,6 +193,8 @@ const makeStyles = (c: Pal) =>
   name: { fontSize: 15, fontWeight: '700', color: c.text },
   meta: { fontSize: 13, color: c.muted, marginTop: 2 },
   valid: { fontSize: 11, color: c.muted, marginTop: 4 },
+  pill: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, alignSelf: 'flex-start' },
+  pillText: { fontSize: 11, fontWeight: '800' },
 });
 
 export default PreApprovedVisitorsScreen;

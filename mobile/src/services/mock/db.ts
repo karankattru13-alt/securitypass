@@ -7,7 +7,7 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const STORAGE_KEY = 'mock_db_v2';
+const STORAGE_KEY = 'mock_db_v3';
 
 export interface MockUser {
   id: number;
@@ -28,6 +28,8 @@ export interface MockUser {
   flat?: string;
   gate?: string;
   shift?: string;
+  /** Guards only: whether this guard is currently on duty. */
+  on_duty?: boolean;
 }
 
 export interface MockVisitor {
@@ -48,9 +50,14 @@ export interface MockVisitor {
   entry_time?: string | null;
   exit_time?: string | null;
   created_by?: number;
+  /** Name of the guard who opened the request (shown to the resident). */
+  created_by_name?: string;
   requested_by?: number;
   /** Registered resident (user id) this visitor request is addressed to. */
   resident_id?: number;
+  /** Who approved/denied it, and their display name. */
+  approved_by?: number;
+  approved_by_name?: string;
 }
 
 export interface MockNotification {
@@ -70,7 +77,10 @@ export interface MockPreApproved {
   purpose: string;
   valid_from: string;
   valid_to: string;
+  /** Number of days the pass was granted for. */
+  days: number;
   flat: string;
+  resident_name: string;
   created_by: number;
   status: 'active' | 'expired';
 }
@@ -154,6 +164,7 @@ function seed(): MockDB {
         is_phone_verified: true,
         gate: 'Main Gate',
         shift: 'Morning Shift',
+        on_duty: true,
       },
       {
         id: 2,
@@ -198,6 +209,19 @@ function seed(): MockDB {
         is_phone_verified: true,
         flat: 'C-202',
       },
+      {
+        id: 6,
+        phone: '9000000006',
+        password: 'password',
+        first_name: 'Sunil',
+        last_name: 'Yadav',
+        email: 'guard2@demo.in',
+        role: 'guard',
+        is_phone_verified: true,
+        gate: 'Service Gate',
+        shift: 'Evening Shift',
+        on_duty: false,
+      },
     ],
     visitors: [
       {
@@ -215,6 +239,7 @@ function seed(): MockDB {
         requested_at: iso(-4),
         photo: null,
         created_by: 1,
+        created_by_name: 'Ravi Kumar',
       },
       {
         id: 12,
@@ -231,6 +256,7 @@ function seed(): MockDB {
         vehicle_number: 'MH12AB1234',
         photo: null,
         created_by: 1,
+        created_by_name: 'Ravi Kumar',
       },
       {
         id: 13,
@@ -361,7 +387,9 @@ function seed(): MockDB {
         purpose: 'Family stay',
         valid_from: iso(-1440),
         valid_to: iso(1440),
+        days: 2,
         flat: 'A-1203',
+        resident_name: 'Priya Sharma',
         created_by: 2,
         status: 'active',
       },
@@ -372,9 +400,24 @@ function seed(): MockDB {
         purpose: 'Daily help',
         valid_from: iso(-10080),
         valid_to: iso(43200),
+        days: 30,
         flat: 'A-1203',
+        resident_name: 'Priya Sharma',
         created_by: 2,
         status: 'active',
+      },
+      {
+        id: 73,
+        name: 'Carpenter - Iqbal',
+        phone: '9822000003',
+        purpose: 'Furniture work',
+        valid_from: iso(-4320),
+        valid_to: iso(-60),
+        days: 3,
+        flat: 'B-101',
+        resident_name: 'Amit Patel',
+        created_by: 4,
+        status: 'expired',
       },
     ],
     qrPasses: [],

@@ -29,20 +29,23 @@ const AdminDashboardScreen: React.FC<any> = ({ navigation }) => {
   const [society, setSociety] = useState<any>(null);
   const [stats, setStats] = useState<any>({ todayVisitors: 0, currentlyInside: 0, pendingApprovals: 0 });
   const [recent, setRecent] = useState<any[]>([]);
+  const [onDutyGuards, setOnDutyGuards] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     setRefreshing(true);
     try {
-      const [s, gs, v] = await Promise.all([
+      const [s, gs, v, g] = await Promise.all([
         api.getSociety(1),
         api.getGuardStats(),
         api.getVisitors(),
+        api.getOnDutyGuards(),
       ]);
       setSociety(s.data);
       setStats(gs.data);
       setRecent(v.data.slice(0, 6));
+      setOnDutyGuards(g.data);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -102,6 +105,26 @@ const AdminDashboardScreen: React.FC<any> = ({ navigation }) => {
           </Button>
         </View>
 
+        <Text style={styles.section}>On duty now ({onDutyGuards.length})</Text>
+        <Card style={styles.dutyCard}>
+          <Card.Content>
+            {onDutyGuards.length === 0 ? (
+              <Text style={styles.dutyEmpty}>No guard is currently on duty.</Text>
+            ) : (
+              onDutyGuards.map((g, i) => (
+                <View
+                  key={g.id}
+                  style={[styles.dutyRow, i > 0 && styles.dutyRowBorder]}
+                >
+                  <MaterialCommunityIcons name="shield-check" size={18} color={c.success} />
+                  <Text style={styles.dutyName}>{g.name}</Text>
+                  <Text style={styles.dutyGate}>{g.gate}</Text>
+                </View>
+              ))
+            )}
+          </Card.Content>
+        </Card>
+
         <Text style={styles.section}>Recent activity</Text>
         {recent.map((v) => (
           <VisitorCard key={v.id} visitor={v} />
@@ -121,6 +144,12 @@ const makeStyles = (c: Pal) =>
   statLabel: { fontSize: 11, color: c.muted, marginTop: 2 },
   linkRow: { flexDirection: 'row', gap: spacing(3), marginVertical: spacing(3) },
   link: { flex: 1, borderRadius: radius.sm },
+  dutyCard: { backgroundColor: c.card },
+  dutyEmpty: { color: c.muted, fontSize: 13 },
+  dutyRow: { flexDirection: 'row', alignItems: 'center', gap: spacing(2), paddingVertical: spacing(2) },
+  dutyRowBorder: { borderTopWidth: 1, borderTopColor: c.border },
+  dutyName: { flex: 1, fontSize: 14, fontWeight: '700', color: c.text },
+  dutyGate: { fontSize: 12, color: c.muted },
   section: {
     fontSize: 16,
     fontWeight: '800',

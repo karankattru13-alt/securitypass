@@ -14,6 +14,7 @@ export interface User {
   flat?: string;
   gate?: string;
   shift?: string;
+  on_duty?: boolean;
 }
 
 interface AuthState {
@@ -103,6 +104,18 @@ export const getMe = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await api.getMe();
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(api.getErrorMessage(error));
+    }
+  }
+);
+
+export const setDuty = createAsyncThunk(
+  'auth/setDuty',
+  async (onDuty: boolean, { rejectWithValue }) => {
+    try {
+      const response = await api.setMyDuty(onDuty);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(api.getErrorMessage(error));
@@ -200,6 +213,14 @@ const authSlice = createSlice({
       })
       .addCase(getMe.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // Duty toggle
+      .addCase(setDuty.fulfilled, (state, action) => {
+        if (state.user) state.user.on_duty = action.payload.on_duty;
+      })
+      .addCase(setDuty.rejected, (state, action) => {
         state.error = action.payload as string;
       })
 

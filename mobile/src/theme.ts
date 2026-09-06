@@ -26,39 +26,41 @@ export interface Palette {
   onHeader: string;
 }
 
+// A distinctive "twilight" palette: violet primary with jewel-tone role accents
+// on a cool porcelain ground.
 export const lightColors: Palette = {
-  primary: '#2563EB',
-  guard: '#2196F3',
-  resident: '#16A34A',
-  admin: '#F97316',
-  bg: '#F4F6F8',
+  primary: '#6D28D9', // violet 700
+  guard: '#0E7490', // cyan 700
+  resident: '#0D9488', // teal 600
+  admin: '#B45309', // amber 700
+  bg: '#F6F5FB',
   card: '#FFFFFF',
-  cardAlt: '#EEF2FF',
-  text: '#111827',
-  muted: '#6B7280',
-  border: '#E5E7EB',
+  cardAlt: '#F0EDFB',
+  text: '#1B1830',
+  muted: '#6B6880',
+  border: '#E6E2F2',
   danger: '#DC2626',
-  warning: '#F59E0B',
-  success: '#16A34A',
-  info: '#0EA5E9',
+  warning: '#D97706',
+  success: '#0D9488',
+  info: '#0E7490',
   onHeader: '#FFFFFF',
 };
 
 export const darkColors: Palette = {
-  primary: '#3B82F6',
-  guard: '#3B82F6',
-  resident: '#22C55E',
-  admin: '#FB923C',
-  bg: '#0B0F14',
-  card: '#161B22',
-  cardAlt: '#1E2633',
-  text: '#E6EDF3',
-  muted: '#9AA4AF',
-  border: '#30363D',
+  primary: '#A78BFA', // violet 400
+  guard: '#22D3EE', // cyan 400
+  resident: '#2DD4BF', // teal 400
+  admin: '#FBBF24', // amber 400
+  bg: '#100C1C',
+  card: '#1B1630',
+  cardAlt: '#241D3E',
+  text: '#ECE9F6',
+  muted: '#A29DB8',
+  border: '#332A4D',
   danger: '#F87171',
   warning: '#FBBF24',
-  success: '#4ADE80',
-  info: '#38BDF8',
+  success: '#2DD4BF',
+  info: '#22D3EE',
   onHeader: '#FFFFFF',
 };
 
