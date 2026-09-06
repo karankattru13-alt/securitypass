@@ -19,8 +19,9 @@ import api from '../../services/api';
 import {
   buildRequestMessage,
   notifyResidentOnWhatsApp,
+  canSendAutomatically,
 } from '../../utils/whatsapp';
-import { appConfirm } from '../../components/AppDialog';
+import { appAlert, appConfirm } from '../../components/AppDialog';
 
 type Pal = ReturnType<typeof useAppColors>;
 
@@ -104,26 +105,35 @@ const NewVisitorScreen: React.FC<any> = ({ navigation, route }) => {
       // Notify the resident on WhatsApp with an approve / deny link.
       const residentPhone = res.resident_phone || selected.phone;
       if (residentPhone) {
-        const send = await appConfirm({
-          title: 'Notify resident on WhatsApp?',
-          message: `Send ${selected.name} a WhatsApp message with the visitor details and an approve / deny link.`,
-          confirmLabel: 'Send',
-          cancelLabel: 'Skip',
-          tone: 'success',
-          icon: 'whatsapp',
+        const message = buildRequestMessage({
+          visitorId: res.id,
+          visitorName: res.name,
+          purpose: res.purpose,
+          flat: res.flat || selected.flat,
+          guardName: me ? `${me.first_name} ${me.last_name}` : undefined,
+          gate: me?.gate,
         });
-        if (send) {
-          await notifyResidentOnWhatsApp(
-            residentPhone,
-            buildRequestMessage({
-              visitorId: res.id,
-              visitorName: res.name,
-              purpose: res.purpose,
-              flat: res.flat || selected.flat,
-              guardName: me ? `${me.first_name} ${me.last_name}` : undefined,
-              gate: me?.gate,
-            })
+
+        if (canSendAutomatically()) {
+          // Delivered straight to the resident's number — no manual step.
+          const r = await notifyResidentOnWhatsApp(residentPhone, message);
+          await appAlert(
+            r.ok ? 'Resident notified' : "Couldn't send WhatsApp",
+            r.ok
+              ? `A WhatsApp message was sent to ${selected.name} (${residentPhone}).`
+              : `${r.error}\nThe request is still pending in the app.`,
+            r.ok ? 'success' : 'warning'
           );
+        } else {
+          const send = await appConfirm({
+            title: 'Message resident on WhatsApp?',
+            message: `Opens WhatsApp to ${selected.name} (${residentPhone}) with the request pre-filled. You still have to press send in WhatsApp — automatic delivery needs the WhatsApp Business API (see README).`,
+            confirmLabel: 'Open WhatsApp',
+            cancelLabel: 'Skip',
+            tone: 'success',
+            icon: 'whatsapp',
+          });
+          if (send) await notifyResidentOnWhatsApp(residentPhone, message);
         }
       }
 

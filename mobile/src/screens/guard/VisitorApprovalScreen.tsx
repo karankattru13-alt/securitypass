@@ -11,7 +11,9 @@ import api from '../../services/api';
 import {
   buildRequestMessage,
   notifyResidentOnWhatsApp,
+  canSendAutomatically,
 } from '../../utils/whatsapp';
+import { appAlert } from '../../components/AppDialog';
 
 type Pal = ReturnType<typeof useAppColors>;
 
@@ -149,8 +151,8 @@ const VisitorApprovalScreen: React.FC<any> = ({ navigation, route }) => {
                 mode="contained-tonal"
                 icon="whatsapp"
                 disabled={busy}
-                onPress={() =>
-                  notifyResidentOnWhatsApp(
+                onPress={async () => {
+                  const r = await notifyResidentOnWhatsApp(
                     visitor.resident_phone,
                     buildRequestMessage({
                       visitorId: visitor.id,
@@ -159,11 +161,22 @@ const VisitorApprovalScreen: React.FC<any> = ({ navigation, route }) => {
                       flat: visitor.flat,
                       guardName: visitor.created_by_name,
                     })
-                  )
-                }
+                  );
+                  if (r.ok && r.mode === 'sent') {
+                    appAlert(
+                      'Resident notified',
+                      `WhatsApp message sent to ${visitor.resident_name || 'the resident'} (${visitor.resident_phone}).`,
+                      'success'
+                    );
+                  } else if (!r.ok) {
+                    appAlert("Couldn't send WhatsApp", r.error, 'warning');
+                  }
+                }}
                 style={styles.next}
               >
-                Send WhatsApp to {visitor.resident_name || 'resident'}
+                {canSendAutomatically()
+                  ? `Send WhatsApp to ${visitor.resident_name || 'resident'}`
+                  : `Open WhatsApp to ${visitor.resident_name || 'resident'}`}
               </Button>
             ) : null}
             <Button

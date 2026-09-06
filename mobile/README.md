@@ -52,11 +52,10 @@ Flat number**; only then do they appear in the admin residents list, the guard's
 - **CSV export**: guard History & Records and the admin Residents / Society /
   Staff screens each have an **Export CSV** button (real file download on web;
   share sheet on native).
-- **WhatsApp alerts**: when a guard raises a request the app offers to WhatsApp
-  the resident's registered number with the visitor details and an approve /
-  deny deep link (`societypass://request/<id>`, or your hosted web URL via
-  `EXPO_PUBLIC_APP_URL`). A manual "Send WhatsApp" button is on the approval
-  screen too.
+- **WhatsApp alerts**: when a guard raises a request the resident's registered
+  number is messaged with the visitor details and an approve / deny link. See
+  **WhatsApp delivery** below — automatic sending needs the WhatsApp Business
+  Cloud API; without it the app opens wa.me for a manual send.
 - **Shared**: notifications centre (polled), profile, settings, light/dark
   preference, one-tap **reset demo data**.
 
@@ -101,3 +100,43 @@ EXPO_PUBLIC_API_URL=https://your-api.example.com/api
 
 `services/api.ts` then uses the real axios `APIClient`. The mock client mirrors
 its method surface, so screens don't change.
+
+### WhatsApp delivery
+
+A browser / mobile app **cannot silently send a WhatsApp message** — WhatsApp
+only allows opening a pre-filled `wa.me` page that the sender confirms. Real
+automatic delivery to the resident's number needs the **WhatsApp Business Cloud
+API** (a business number + token). Because that token must never ship in a
+public bundle, the app calls a small relay you host.
+
+`utils/whatsapp.ts` picks a delivery mode from env (see [.env.example](.env.example)):
+
+1. **`EXPO_PUBLIC_WA_PROXY_URL`** — your endpoint. It gets `POST { to, message }`
+   and forwards to the Cloud API. Minimal Node example:
+
+   ```js
+   app.post('/whatsapp/send', async (req, res) => {
+     const { to, message } = req.body;
+     const r = await fetch(
+       `https://graph.facebook.com/v21.0/${process.env.WA_PHONE_ID}/messages`,
+       { method: 'POST',
+         headers: { Authorization: `Bearer ${process.env.WA_TOKEN}`,
+                    'Content-Type': 'application/json' },
+         body: JSON.stringify({ messaging_product: 'whatsapp', to,
+                                type: 'text', text: { body: message } }) });
+     res.sendStatus(r.ok ? 200 : 502);
+   });
+   ```
+
+   > Cloud API free-form text only reaches users inside a 24-hour session
+   > window; for cold notifications send an approved **template** message and
+   > adapt the relay accordingly.
+
+2. **`EXPO_PUBLIC_WA_TOKEN` + `EXPO_PUBLIC_WA_PHONE_ID`** — direct Cloud API call
+   from the client. Works for dev / private native builds; the token is exposed.
+
+3. Neither — the app opens `wa.me`; the guard taps **send** in WhatsApp.
+
+The approve / deny link in the message is `societypass://request/<id>` (opens the
+installed app) or `${EXPO_PUBLIC_APP_URL}/request/<id>` when you host the web
+build; React Navigation routes it to the resident's approve/deny screen.
