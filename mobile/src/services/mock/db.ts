@@ -7,7 +7,7 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const STORAGE_KEY = 'mock_db_v3';
+const STORAGE_KEY = 'mock_db_v4';
 
 export interface MockUser {
   id: number;
@@ -30,6 +30,8 @@ export interface MockUser {
   shift?: string;
   /** Guards only: whether this guard is currently on duty. */
   on_duty?: boolean;
+  /** Guards only: which shift the guard is signed on for. */
+  duty_shift?: 'day' | 'night';
   /** Per-user UI preference. */
   theme?: 'light' | 'dark';
 }
@@ -85,6 +87,9 @@ export interface MockPreApproved {
   resident_name: string;
   created_by: number;
   status: 'active' | 'expired';
+  /** True while a guard has admitted this pass and the visitor is inside. */
+  admitted?: boolean;
+  admitted_visit_id?: number;
 }
 
 export interface MockQRPass {
@@ -165,8 +170,9 @@ function seed(): MockDB {
         role: 'guard',
         is_phone_verified: true,
         gate: 'Main Gate',
-        shift: 'Morning Shift',
+        shift: 'Day Shift',
         on_duty: true,
+        duty_shift: 'day',
       },
       {
         id: 2,
@@ -221,8 +227,9 @@ function seed(): MockDB {
         role: 'guard',
         is_phone_verified: true,
         gate: 'Service Gate',
-        shift: 'Evening Shift',
+        shift: 'Night Shift',
         on_duty: false,
+        duty_shift: 'night',
       },
     ],
     visitors: [

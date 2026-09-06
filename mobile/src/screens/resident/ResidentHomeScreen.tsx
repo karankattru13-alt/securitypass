@@ -79,20 +79,33 @@ const ResidentHomeScreen: React.FC<any> = ({ navigation }) => {
       onRefresh={load}
     >
       <AppHeader
-        title={`Hi, ${user?.first_name ?? 'Resident'}`}
+        title={user ? `${user.first_name} ${user.last_name}` : 'Resident'}
         subtitle={user?.flat ? `Flat ${user.flat}` : 'Welcome back'}
         color={c.resident}
         right={
-          <Tooltip title={unread > 0 ? `Notifications (${unread} unread)` : 'Notifications'}>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('Notifications')}
-              hitSlop={12}
-              accessibilityLabel="Notifications"
+          <View style={styles.headerRight}>
+            <Tooltip
+              title={unread > 0 ? `Notifications (${unread} unread)` : 'Notifications'}
             >
-              <MaterialCommunityIcons name="bell-outline" size={26} color="#fff" />
-              {unread > 0 && <View style={styles.dot} />}
-            </TouchableOpacity>
-          </Tooltip>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Notifications')}
+                hitSlop={12}
+                accessibilityLabel="Notifications"
+              >
+                <MaterialCommunityIcons name="bell-outline" size={24} color="#fff" />
+                {unread > 0 && <View style={styles.dot} />}
+              </TouchableOpacity>
+            </Tooltip>
+            <Tooltip title="Profile">
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Profile')}
+                hitSlop={12}
+                accessibilityLabel="Profile"
+              >
+                <MaterialCommunityIcons name="account-circle" size={26} color="#fff" />
+              </TouchableOpacity>
+            </Tooltip>
+          </View>
         }
       />
       <View style={styles.body}>
@@ -118,8 +131,8 @@ const ResidentHomeScreen: React.FC<any> = ({ navigation }) => {
             <Text style={styles.dutyText}>
               {onDutyGuards.length
                 ? `On duty: ${onDutyGuards
-                    .map((g) => `${g.name} (${g.gate})`)
-                    .join(', ')}`
+                    .map((g) => `${g.name} — ${g.gate} · ${g.shift}`)
+                    .join('  |  ')}`
                 : 'No guard is on duty right now'}
             </Text>
           </Card.Content>
@@ -225,6 +238,7 @@ const makeStyles = (c: Pal) =>
     borderRadius: 5,
     backgroundColor: c.warning,
   },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: spacing(3) },
   dutyCard: { backgroundColor: c.card, marginBottom: spacing(4), borderWidth: 1, borderColor: c.border },
   dutyRow: { flexDirection: 'row', alignItems: 'center', gap: spacing(2) },
   dutyText: { flex: 1, fontSize: 12.5, color: c.text, fontWeight: '600' },

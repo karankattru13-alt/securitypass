@@ -15,6 +15,7 @@ export interface User {
   gate?: string;
   shift?: string;
   on_duty?: boolean;
+  duty_shift?: 'day' | 'night';
   theme?: 'light' | 'dark';
 }
 
@@ -114,9 +115,12 @@ export const getMe = createAsyncThunk(
 
 export const setDuty = createAsyncThunk(
   'auth/setDuty',
-  async (onDuty: boolean, { rejectWithValue }) => {
+  async (
+    arg: { onDuty: boolean; dutyShift?: 'day' | 'night' },
+    { rejectWithValue }
+  ) => {
     try {
-      const response = await api.setMyDuty(onDuty);
+      const response = await api.setMyDuty(arg.onDuty, arg.dutyShift);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(api.getErrorMessage(error));
@@ -219,7 +223,10 @@ const authSlice = createSlice({
 
       // Duty toggle
       .addCase(setDuty.fulfilled, (state, action) => {
-        if (state.user) state.user.on_duty = action.payload.on_duty;
+        if (state.user) {
+          state.user.on_duty = action.payload.on_duty;
+          state.user.duty_shift = action.payload.duty_shift;
+        }
       })
       .addCase(setDuty.rejected, (state, action) => {
         state.error = action.payload as string;

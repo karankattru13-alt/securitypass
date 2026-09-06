@@ -37,7 +37,11 @@ const GuardHomeScreen: React.FC<any> = ({ navigation }) => {
       setPending(p.data);
       setInside(ins.data);
       setStats(st.data);
-      setPreApproved(pre.data.filter((x: any) => x.status === 'active').slice(0, 5));
+      setPreApproved(
+        pre.data
+          .filter((x: any) => x.status === 'active' && !x.admitted)
+          .slice(0, 5)
+      );
     } catch (error) {
       console.error('Error loading guard data:', error);
     } finally {
@@ -95,12 +99,27 @@ const GuardHomeScreen: React.FC<any> = ({ navigation }) => {
       <View style={styles.wrap}>
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.hTitle}>SocietyPass Guard</Text>
+            <Text style={styles.hTitle}>
+              {user ? `${user.first_name} ${user.last_name}` : 'Guard'}
+            </Text>
             <Text style={styles.hSub}>
-              {user?.gate || 'Main Gate'} • {user?.on_duty ? 'On duty' : 'Off duty'}
+              {user?.gate || 'Main Gate'} •{' '}
+              {user?.on_duty
+                ? user?.duty_shift === 'night'
+                  ? 'Night Shift'
+                  : 'Day Shift'
+                : 'Off duty'}
             </Text>
           </View>
-          <Icon name="shield-account" size={26} color="#fff" />
+          <Tooltip title="Profile">
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Profile')}
+              hitSlop={12}
+              accessibilityLabel="Profile"
+            >
+              <Icon name="account-circle" size={26} color="#fff" />
+            </TouchableOpacity>
+          </Tooltip>
           <Tooltip title="Sign out">
             <TouchableOpacity
               onPress={() => confirmSignOut(() => dispatch(logout()))}

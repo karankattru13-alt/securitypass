@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Card, Switch, ActivityIndicator, Divider } from 'react-native-paper';
+import { Card, ActivityIndicator, Divider, SegmentedButtons } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { useFocusEffect } from '@react-navigation/native';
@@ -14,6 +14,12 @@ import { setDuty } from '../../store/slices/authSlice';
 import api from '../../services/api';
 
 type Pal = ReturnType<typeof useAppColors>;
+
+const MODES = [
+  { value: 'off', label: 'Off Duty', icon: 'shield-off-outline' },
+  { value: 'day', label: 'Day Duty', icon: 'weather-sunny' },
+  { value: 'night', label: 'Night Duty', icon: 'weather-night' },
+];
 
 const GuardDutyScreen: React.FC = () => {
   const c = useAppColors();
@@ -42,17 +48,29 @@ const GuardDutyScreen: React.FC = () => {
     }, [load])
   );
 
-  const toggle = async (value: boolean) => {
+  const mode: 'off' | 'day' | 'night' = !user?.on_duty
+    ? 'off'
+    : user?.duty_shift === 'night'
+    ? 'night'
+    : 'day';
+
+  const change = async (next: string) => {
     setSaving(true);
     try {
-      await dispatch(setDuty(value)).unwrap();
+      await dispatch(
+        setDuty({
+          onDuty: next !== 'off',
+          dutyShift: next === 'night' ? 'night' : 'day',
+        })
+      ).unwrap();
       await load();
     } finally {
       setSaving(false);
     }
   };
 
-  const onDuty = !!user?.on_duty;
+  const onDuty = mode !== 'off';
+  const isNight = mode === 'night';
 
   return (
     <Screen padded={false} refreshing={refreshing} onRefresh={load}>
@@ -66,33 +84,45 @@ const GuardDutyScreen: React.FC = () => {
         <Card style={[styles.statusCard, { borderColor: onDuty ? c.success : c.border }]}>
           <Card.Content>
             <View style={styles.statusRow}>
-              <View style={styles.statusLeft}>
-                <MaterialCommunityIcons
-                  name={onDuty ? 'shield-check' : 'shield-off-outline'}
-                  size={40}
-                  color={onDuty ? c.success : c.muted}
-                />
-                <View style={styles.statusText}>
-                  <Text style={styles.statusTitle}>
-                    {onDuty ? 'On duty' : 'Off duty'}
-                  </Text>
-                  <Text style={styles.statusSub}>
-                    {onDuty
-                      ? 'Residents and admins can see you are at the gate.'
-                      : 'Turn on when you start your shift.'}
-                  </Text>
-                </View>
-              </View>
-              <Switch
-                value={onDuty}
-                onValueChange={toggle}
-                disabled={saving}
-                color={c.success}
+              <MaterialCommunityIcons
+                name={
+                  !onDuty ? 'shield-off-outline' : isNight ? 'weather-night' : 'weather-sunny'
+                }
+                size={40}
+                color={!onDuty ? c.muted : isNight ? c.info : c.warning}
               />
+              <View style={styles.statusText}>
+                <Text style={styles.statusTitle}>
+                  {mode === 'off'
+                    ? 'Off duty'
+                    : isNight
+                    ? 'On duty — Night Shift'
+                    : 'On duty — Day Shift'}
+                </Text>
+                <Text style={styles.statusSub}>
+                  {onDuty
+                    ? 'Residents and admins can see you are at the gate.'
+                    : 'Pick a shift when you start work.'}
+                </Text>
+              </View>
             </View>
+
+            <SegmentedButtons
+              value={mode}
+              onValueChange={change}
+              buttons={MODES.map((m) => ({
+                value: m.value,
+                label: m.label,
+                icon: m.icon,
+                disabled: saving,
+              }))}
+              style={styles.segment}
+            />
+
             <Divider style={styles.divider} />
             <Text style={styles.meta}>
-              {user?.gate || 'Main Gate'} · {user?.shift || 'General Shift'}
+              {user?.gate || 'Main Gate'} ·{' '}
+              {mode === 'off' ? 'Not signed on' : isNight ? 'Night Shift' : 'Day Shift'}
             </Text>
           </Card.Content>
         </Card>
@@ -107,7 +137,12 @@ const GuardDutyScreen: React.FC = () => {
             {onDutyGuards.map((g, i) => (
               <React.Fragment key={g.id}>
                 <View style={styles.guardRow}>
-                  <View style={[styles.avatar, { backgroundColor: c.guard }]}>
+                  <View
+                    style={[
+                      styles.avatar,
+                      { backgroundColor: g.duty_shift === 'night' ? c.info : c.guard },
+                    ]}
+                  >
                     <Text style={styles.avatarText}>
                       {initials(g.first_name, g.last_name)}
                     </Text>
@@ -121,7 +156,11 @@ const GuardDutyScreen: React.FC = () => {
                       {g.gate} · {g.shift}
                     </Text>
                   </View>
-                  <View style={[styles.dot, { backgroundColor: c.success }]} />
+                  <MaterialCommunityIcons
+                    name={g.duty_shift === 'night' ? 'weather-night' : 'weather-sunny'}
+                    size={18}
+                    color={g.duty_shift === 'night' ? c.info : c.warning}
+                  />
                 </View>
                 {i < onDutyGuards.length - 1 && <Divider />}
               </React.Fragment>
@@ -141,11 +180,11 @@ const makeStyles = (c: Pal) =>
       borderWidth: 1.5,
       marginBottom: spacing(5),
     },
-    statusRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    statusLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+    statusRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing(4) },
     statusText: { marginLeft: spacing(3), flex: 1 },
-    statusTitle: { fontSize: 18, fontWeight: '800', color: c.text },
+    statusTitle: { fontSize: 17, fontWeight: '800', color: c.text },
     statusSub: { fontSize: 12, color: c.muted, marginTop: 2 },
+    segment: { marginTop: spacing(1) },
     divider: { marginVertical: spacing(3) },
     meta: { fontSize: 13, color: c.muted, fontWeight: '600' },
     section: {
@@ -167,7 +206,6 @@ const makeStyles = (c: Pal) =>
     guardInfo: { flex: 1, marginLeft: spacing(3) },
     guardName: { fontSize: 15, fontWeight: '700', color: c.text },
     guardMeta: { fontSize: 12, color: c.muted, marginTop: 2 },
-    dot: { width: 10, height: 10, borderRadius: 5 },
   });
 
 export default GuardDutyScreen;

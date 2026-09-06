@@ -234,8 +234,11 @@ class APIClient {
     return this.client.get('/guards/on-duty/');
   }
 
-  async setMyDuty(onDuty: boolean) {
-    return this.client.post('/guards/duty/', { on_duty: onDuty });
+  async setMyDuty(onDuty: boolean, dutyShift?: 'day' | 'night') {
+    return this.client.post('/guards/duty/', {
+      on_duty: onDuty,
+      duty_shift: dutyShift,
+    });
   }
 
   async setGuardDuty(guardId: number, onDuty: boolean) {

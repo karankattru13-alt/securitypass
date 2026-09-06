@@ -71,7 +71,9 @@ class MockAPIClient {
         email: `${phone}@demo.in`,
         role: newRole,
         is_phone_verified: true,
-        ...(newRole === 'guard' ? { gate: 'Main Gate', shift: 'Morning Shift' } : {}),
+        ...(newRole === 'guard'
+          ? { gate: 'Main Gate', shift: 'Day Shift', on_duty: false, duty_shift: 'day' as const }
+          : {}),
       };
       db.users.push(user);
       await persist();
@@ -330,6 +332,14 @@ class MockAPIClient {
       status: 'exited',
       exit_time: new Date().toISOString(),
     });
+    // Free up the linked pre-approved pass so it can be admitted again later.
+    const db = await getDb();
+    const pa = db.preApproved.find((p) => p.admitted_visit_id === Number(visitorId));
+    if (pa) {
+      pa.admitted = false;
+      pa.admitted_visit_id = undefined;
+      await persist();
+    }
     return ok(v);
   }
 
@@ -411,6 +421,7 @@ class MockAPIClient {
     if (new Date() > new Date(p.valid_to)) {
       throw new ApiError(400, 'This pre-approved pass has expired.');
     }
+    if (p.admitted) throw new ApiError(400, 'This visitor is already inside.');
     const me = await currentUser();
     const resident = db.users.find(
       (u) => u.flat === p.flat && (u.role === 'resident' || u.role === 'staff')
@@ -437,6 +448,8 @@ class MockAPIClient {
       approved_by_name: 'Pre-approved pass',
     };
     db.visitors.unshift(visitor);
+    p.admitted = true;
+    p.admitted_visit_id = visitor.id;
     await persist();
     return ok(visitor);
   }
@@ -559,6 +572,12 @@ class MockAPIClient {
 
   // ---- Duty & guard directory ------------------------------------
   private guardCard(u: MockUser) {
+    const dutyShift: 'day' | 'night' = u.duty_shift === 'night' ? 'night' : 'day';
+    const shiftLabel = u.on_duty
+      ? dutyShift === 'night'
+        ? 'Night Shift'
+        : 'Day Shift'
+      : u.shift || 'Off shift';
     return {
       id: u.id,
       name: `${u.first_name} ${u.last_name}`.trim(),
@@ -566,7 +585,8 @@ class MockAPIClient {
       last_name: u.last_name,
       phone: u.phone,
       gate: u.gate || 'Main Gate',
-      shift: u.shift || 'General Shift',
+      shift: shiftLabel,
+      duty_shift: dutyShift,
       on_duty: !!u.on_duty,
     };
   }
@@ -595,14 +615,15 @@ class MockAPIClient {
     );
   }
 
-  /** The signed-in guard turns their own duty status on/off. */
-  async setMyDuty(onDuty: boolean) {
+  /** The signed-in guard sets their own duty status and day/night shift. */
+  async setMyDuty(onDuty: boolean, dutyShift?: 'day' | 'night') {
     await delay(150);
     const db = await getDb();
     const me = await currentUser();
     if (!me) throw new ApiError(401, 'Not authenticated');
     const idx = db.users.findIndex((u) => u.id === me.id);
     db.users[idx].on_duty = onDuty;
+    if (dutyShift) db.users[idx].duty_shift = dutyShift;
     await persist();
     return ok(this.guardCard(db.users[idx]));
   }
