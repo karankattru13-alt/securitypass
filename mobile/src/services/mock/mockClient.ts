@@ -56,7 +56,8 @@ class MockAPIClient {
     code: string,
     firstName?: string,
     lastName?: string,
-    role?: string
+    role?: string,
+    extra?: { society_id?: number | null; society?: any }
   ) {
     await delay();
     if (code !== '123456') throw new ApiError(400, 'Invalid OTP. Use 123456 in demo mode.');
@@ -75,7 +76,7 @@ class MockAPIClient {
         password: 'password',
         first_name: firstName || 'New',
         last_name: lastName || (newRole === 'guard' ? 'Guard' : 'Resident'),
-        email: `${phone}@demo.in`,
+        email: `${phone}@societypass.app`,
         role: newRole,
         is_phone_verified: true,
         ...(newRole === 'guard'
@@ -83,6 +84,25 @@ class MockAPIClient {
           : {}),
       };
       db.users.push(user);
+
+      // Owner sign-up: create the society/building they entered.
+      if (newRole === 'society_admin' && extra?.society?.name) {
+        const soc: MockSociety = {
+          id: nextId(db),
+          name: String(extra.society.name).trim() || 'My Society',
+          type: extra.society.type === 'building' ? 'building' : 'society',
+          city: String(extra.society.city || '').trim(),
+          address: String(extra.society.address || '').trim(),
+          pincode: String(extra.society.pincode || '').trim(),
+          created_by: user.id,
+          created_at: new Date().toISOString(),
+        };
+        db.societies.push(soc);
+        user.society_id = soc.id;
+      } else if (extra?.society_id) {
+        // Guard / resident sign-up: attach to the society they picked.
+        user.society_id = Number(extra.society_id);
+      }
       await persist();
     }
     return ok({

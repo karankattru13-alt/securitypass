@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { TextInput, Button, HelperText } from 'react-native-paper';
+import { TextInput, Button, HelperText, SegmentedButtons } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
+import SocietyPicker from '../../components/SocietyPicker';
 import { useAppColors, spacing } from '../../theme';
 import { AppDispatch, RootState } from '../../store';
 import { requestOTP, verifyOTP, clearError } from '../../store/slices/authSlice';
@@ -15,13 +16,14 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
   const styles = React.useMemo(() => makeStyles(c), [c]);
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error } = useSelector((s: RootState) => s.auth);
+
   const rp = route.params?.role;
   const role: 'resident' | 'guard' | 'society_admin' =
     rp === 'guard' ? 'guard' : rp === 'admin' || rp === 'society_admin' ? 'society_admin' : 'resident';
   const isGuard = role === 'guard';
   const isAdmin = role === 'society_admin';
   const accent = isGuard ? c.guard : isAdmin ? c.admin : c.primary;
-  const roleWord = isGuard ? 'Guard' : isAdmin ? 'Owner / Admin' : 'Resident';
+  const roleWord = isGuard ? 'guard' : isAdmin ? 'owner / admin' : 'resident';
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -29,7 +31,22 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
   const [code, setCode] = useState('');
   const [sent, setSent] = useState(false);
 
-  const canSend = firstName.trim() && lastName.trim() && phone.trim().length === 10;
+  // Guard / resident: pick an existing society.
+  const [societyId, setSocietyId] = useState<number | null>(null);
+  const [societyCount, setSocietyCount] = useState<number | null>(null);
+
+  // Admin: create a new society / building on sign-up.
+  const [sName, setSName] = useState('');
+  const [sType, setSType] = useState<'society' | 'building'>('society');
+  const [sCity, setSCity] = useState('');
+  const [sAddress, setSAddress] = useState('');
+  const [sPincode, setSPincode] = useState('');
+
+  const nameOk = firstName.trim() && lastName.trim() && phone.trim().length === 10;
+  const societyOk = isAdmin
+    ? !!sName.trim()
+    : societyCount === 0 || societyId != null;
+  const canSend = nameOk && societyOk;
 
   const sendCode = async () => {
     dispatch(clearError());
@@ -46,6 +63,16 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         role,
+        society_id: !isAdmin ? societyId : undefined,
+        society: isAdmin
+          ? {
+              name: sName.trim(),
+              type: sType,
+              city: sCity.trim(),
+              address: sAddress.trim(),
+              pincode: sPincode.trim(),
+            }
+          : undefined,
       })
     );
   };
@@ -53,7 +80,7 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
   return (
     <Screen padded={false}>
       <AppHeader
-        title={`Create ${roleWord.toLowerCase()} account`}
+        title={`Create ${roleWord} account`}
         subtitle={
           isAdmin
             ? 'Society / building owner sign-up'
@@ -89,6 +116,60 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
           disabled={sent}
           style={styles.input}
         />
+
+        {!isAdmin ? (
+          <SocietyPicker
+            value={societyId}
+            onChange={setSocietyId}
+            onCount={setSocietyCount}
+            disabled={sent}
+            emptyHint="No societies exist yet. Ask your society owner to set one up, or continue and pick it later in Profile."
+          />
+        ) : (
+          <>
+            <Text style={styles.sectionLabel}>Your society / building</Text>
+            <TextInput
+              label="Name *"
+              value={sName}
+              onChangeText={setSName}
+              disabled={sent}
+              autoCapitalize="words"
+              style={styles.input}
+            />
+            <SegmentedButtons
+              value={sType}
+              onValueChange={(v) => setSType(v as any)}
+              buttons={[
+                { value: 'society', label: 'Society' },
+                { value: 'building', label: 'Building' },
+              ]}
+              style={styles.segment}
+            />
+            <TextInput
+              label="City"
+              value={sCity}
+              onChangeText={setSCity}
+              disabled={sent}
+              autoCapitalize="words"
+              style={styles.input}
+            />
+            <TextInput
+              label="Address"
+              value={sAddress}
+              onChangeText={setSAddress}
+              disabled={sent}
+              style={styles.input}
+            />
+            <TextInput
+              label="Pincode"
+              value={sPincode}
+              onChangeText={setSPincode}
+              keyboardType="number-pad"
+              disabled={sent}
+              style={styles.input}
+            />
+          </>
+        )}
 
         {sent && (
           <>
@@ -130,7 +211,11 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
             buttonColor={accent}
             style={styles.button}
           >
-            {isGuard ? 'Verify & Create Guard Account' : 'Verify & Create Account'}
+            {isAdmin
+              ? 'Verify & Create Account + Society'
+              : isGuard
+              ? 'Verify & Create Guard Account'
+              : 'Verify & Create Account'}
           </Button>
         )}
       </View>
@@ -140,10 +225,18 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
 
 const makeStyles = (c: Pal) =>
   StyleSheet.create({
-  body: { padding: spacing(4) },
-  input: { marginBottom: spacing(3), backgroundColor: c.card },
-  hint: { color: c.muted, fontSize: 12, marginBottom: spacing(2) },
-  button: { marginTop: spacing(2), paddingVertical: spacing(1) },
-});
+    body: { padding: spacing(4) },
+    input: { marginBottom: spacing(3), backgroundColor: c.card },
+    segment: { marginBottom: spacing(3) },
+    sectionLabel: {
+      fontSize: 13,
+      fontWeight: '800',
+      color: c.text,
+      marginBottom: spacing(2),
+      marginTop: spacing(1),
+    },
+    hint: { color: c.muted, fontSize: 12, marginBottom: spacing(2) },
+    button: { marginTop: spacing(2), paddingVertical: spacing(1) },
+  });
 
 export default RegisterScreen;

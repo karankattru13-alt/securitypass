@@ -61,6 +61,14 @@ export const verifyOTP = createAsyncThunk(
       firstName?: string;
       lastName?: string;
       role?: string;
+      society_id?: number | null;
+      society?: {
+        name: string;
+        type?: 'society' | 'building';
+        city?: string;
+        address?: string;
+        pincode?: string;
+      };
     },
     { rejectWithValue }
   ) => {
@@ -70,7 +78,8 @@ export const verifyOTP = createAsyncThunk(
         data.code,
         data.firstName,
         data.lastName,
-        data.role
+        data.role,
+        { society_id: data.society_id, society: data.society }
       );
 
       await AsyncStorage.setItem('access_token', response.data.access);

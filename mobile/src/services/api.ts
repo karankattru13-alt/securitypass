@@ -76,7 +76,8 @@ class APIClient {
     code: string,
     firstName?: string,
     lastName?: string,
-    role?: string
+    role?: string,
+    extra?: { society_id?: number | null; society?: any }
   ) {
     return this.client.post('/users/auth/verify_otp/', {
       phone,
@@ -84,6 +85,8 @@ class APIClient {
       first_name: firstName,
       last_name: lastName,
       role,
+      society_id: extra?.society_id ?? undefined,
+      society: extra?.society ?? undefined,
     });
   }
 
