@@ -122,6 +122,7 @@ const mkPaper = (dark: boolean, c: Palette) => {
   const base = dark ? MD3DarkTheme : MD3LightTheme;
   return {
     ...base,
+    roundness: 4,
     colors: {
       ...base.colors,
       primary: c.primary,

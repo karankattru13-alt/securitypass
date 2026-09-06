@@ -7,7 +7,7 @@ import AppHeader from '../../components/AppHeader';
 import { useAppColors, spacing } from '../../theme';
 import { AppDispatch, RootState } from '../../store';
 import { setTheme } from '../../store/slices/guiSlice';
-import { logout } from '../../store/slices/authSlice';
+import { logout, updateProfile } from '../../store/slices/authSlice';
 import api from '../../services/api';
 
 type Pal = ReturnType<typeof useAppColors>;
@@ -54,13 +54,15 @@ const SettingsScreen: React.FC<any> = ({ navigation }) => {
         <Card style={styles.card}>
           <List.Item
             title="Dark theme"
-            description={theme === 'dark' ? 'On' : 'Off'}
+            description={`${theme === 'dark' ? 'On' : 'Off'} · saved to this account`}
             left={(p) => <List.Icon {...p} icon="theme-light-dark" />}
             right={() => (
               <Switch
                 value={theme === 'dark'}
                 onValueChange={(v) => {
-                  dispatch(setTheme(v ? 'dark' : 'light'));
+                  const next = v ? 'dark' : 'light';
+                  dispatch(setTheme(next));
+                  dispatch(updateProfile({ theme: next }));
                 }}
               />
             )}

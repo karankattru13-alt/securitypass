@@ -402,6 +402,45 @@ class MockAPIClient {
     return ok(list);
   }
 
+  /** Guard logs entry for a resident's standing pre-approved visitor. */
+  async admitPreApproved(preApprovedId: number) {
+    await delay();
+    const db = await getDb();
+    const p = db.preApproved.find((x) => x.id === Number(preApprovedId));
+    if (!p) throw new ApiError(404, 'Pre-approved pass not found');
+    if (new Date() > new Date(p.valid_to)) {
+      throw new ApiError(400, 'This pre-approved pass has expired.');
+    }
+    const me = await currentUser();
+    const resident = db.users.find(
+      (u) => u.flat === p.flat && (u.role === 'resident' || u.role === 'staff')
+    );
+    const now = new Date().toISOString();
+    const visitor: MockVisitor = {
+      id: nextId(db),
+      name: p.name,
+      visitor_name: p.name,
+      phone: p.phone,
+      purpose: p.purpose,
+      type: 'guest',
+      status: 'entered',
+      approval_status: 'approved',
+      flat: p.flat,
+      resident_name: p.resident_name,
+      resident_id: resident?.id,
+      photo: null,
+      requested_at: now,
+      entry_time: now,
+      exit_time: null,
+      created_by: me?.id,
+      created_by_name: me ? `${me.first_name} ${me.last_name}` : undefined,
+      approved_by_name: 'Pre-approved pass',
+    };
+    db.visitors.unshift(visitor);
+    await persist();
+    return ok(visitor);
+  }
+
   // ---- QR passes --------------------------------------------------
   async createQRPass(data: any) {
     await delay();

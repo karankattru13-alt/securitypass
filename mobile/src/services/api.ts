@@ -160,6 +160,10 @@ class APIClient {
     return this.client.get('/visitors/pre-approved/');
   }
 
+  async admitPreApproved(preApprovedId: number) {
+    return this.client.post(`/visitors/pre-approved/${preApprovedId}/admit/`);
+  }
+
   // QR Passes
   async createQRPass(data: any) {
     return this.client.post('/visitors/qr-passes/', data);

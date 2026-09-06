@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Card, Avatar, Tooltip } from 'react-native-paper';
+import { Card, Avatar, Tooltip, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import StatusPill from './StatusPill';
-import { useAppColors, spacing } from '../theme';
+import { useAppColors, spacing, radius } from '../theme';
 import { smartDate } from '../utils/format';
 
 const typeIcon: Record<string, keyof typeof MaterialCommunityIcons.glyphMap> = {
@@ -21,51 +21,99 @@ interface VisitorLike {
   purpose?: string;
   type?: string;
   status?: string;
+  approval_status?: string;
   requested_at?: string;
   entry_time?: string | null;
+  created_by_name?: string;
 }
 
-const VisitorCard: React.FC<{ visitor: VisitorLike; onPress?: () => void }> = ({
-  visitor,
-  onPress,
-}) => {
+interface Props {
+  visitor: VisitorLike;
+  onPress?: () => void;
+  /** When provided and the visitor is still pending, inline Accept / Deny show. */
+  onDecide?: (approve: boolean) => void;
+  deciding?: boolean;
+}
+
+const VisitorCard: React.FC<Props> = ({ visitor, onPress, onDecide, deciding }) => {
   const c = useAppColors();
+  const styles = React.useMemo(() => makeStyles(c), [c]);
   const name = visitor.name || visitor.visitor_name || 'Visitor';
+  const pending = visitor.approval_status === 'pending' || visitor.status === 'waiting';
 
   const body = (
-    <Card style={[styles.card, { backgroundColor: c.card }]} onPress={onPress}>
-      <Card.Content style={styles.row}>
-        <Avatar.Icon
-          size={44}
-          icon={typeIcon[visitor.type || 'guest'] || 'account'}
-          style={{ backgroundColor: c.primary }}
-          color="#fff"
-        />
-        <View style={styles.info}>
-          <Text style={[styles.name, { color: c.text }]}>{name}</Text>
-          <Text style={[styles.meta, { color: c.muted }]}>
-            {visitor.flat}
-            {visitor.purpose ? ` • ${visitor.purpose}` : ''}
-          </Text>
-          <Text style={[styles.time, { color: c.muted }]}>
-            {smartDate(visitor.entry_time || visitor.requested_at)}
-          </Text>
+    <Card style={styles.card} onPress={onPress}>
+      <Card.Content>
+        <View style={styles.row}>
+          <Avatar.Icon
+            size={44}
+            icon={typeIcon[visitor.type || 'guest'] || 'account'}
+            style={{ backgroundColor: c.primary }}
+            color="#fff"
+          />
+          <View style={styles.info}>
+            <Text style={styles.name}>{name}</Text>
+            <Text style={styles.meta}>
+              {visitor.flat}
+              {visitor.purpose ? ` • ${visitor.purpose}` : ''}
+            </Text>
+            <Text style={styles.time}>
+              {visitor.created_by_name ? `by ${visitor.created_by_name} • ` : ''}
+              {smartDate(visitor.entry_time || visitor.requested_at)}
+            </Text>
+          </View>
+          <StatusPill status={visitor.status} />
         </View>
-        <StatusPill status={visitor.status} />
+
+        {onDecide && pending ? (
+          <View style={styles.decideRow}>
+            <Button
+              mode="contained"
+              compact
+              icon="check"
+              buttonColor={c.success}
+              loading={deciding}
+              disabled={deciding}
+              onPress={() => onDecide(true)}
+              style={styles.decideBtn}
+            >
+              Accept
+            </Button>
+            <Button
+              mode="contained"
+              compact
+              icon="close"
+              buttonColor={c.danger}
+              loading={deciding}
+              disabled={deciding}
+              onPress={() => onDecide(false)}
+              style={styles.decideBtn}
+            >
+              Deny
+            </Button>
+          </View>
+        ) : null}
       </Card.Content>
     </Card>
   );
 
-  return onPress ? <Tooltip title="View details">{body}</Tooltip> : body;
+  return onPress && !onDecide ? <Tooltip title="View details">{body}</Tooltip> : body;
 };
 
-const styles = StyleSheet.create({
-  card: { marginBottom: spacing(3) },
-  row: { flexDirection: 'row', alignItems: 'center' },
-  info: { flex: 1, marginLeft: spacing(3) },
-  name: { fontSize: 15, fontWeight: '700' },
-  meta: { fontSize: 13, marginTop: 2 },
-  time: { fontSize: 11, marginTop: 2 },
-});
+const makeStyles = (c: ReturnType<typeof useAppColors>) =>
+  StyleSheet.create({
+    card: { marginBottom: spacing(3), backgroundColor: c.card },
+    row: { flexDirection: 'row', alignItems: 'center' },
+    info: { flex: 1, marginLeft: spacing(3) },
+    name: { fontSize: 15, fontWeight: '700', color: c.text },
+    meta: { fontSize: 13, color: c.muted, marginTop: 2 },
+    time: { fontSize: 11, color: c.muted, marginTop: 2 },
+    decideRow: {
+      flexDirection: 'row',
+      gap: spacing(2),
+      marginTop: spacing(3),
+    },
+    decideBtn: { borderRadius: radius.sm },
+  });
 
 export default VisitorCard;

@@ -11,6 +11,7 @@ import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 
 import store from './src/store';
 import { useThemeBundle, useAppColors } from './src/theme';
+import { useThemeSync } from './src/hooks/useThemeSync';
 import { useAuth } from './src/hooks/useAuth';
 import { useNotifications } from './src/hooks/useNotifications';
 
@@ -192,6 +193,7 @@ const RootNavigator = () => {
 };
 
 const ThemedApp = () => {
+  useThemeSync();
   const { paper, nav } = useThemeBundle();
   return (
     <PaperProvider theme={paper}>

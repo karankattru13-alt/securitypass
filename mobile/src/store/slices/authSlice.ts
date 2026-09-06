@@ -15,6 +15,7 @@ export interface User {
   gate?: string;
   shift?: string;
   on_duty?: boolean;
+  theme?: 'light' | 'dark';
 }
 
 interface AuthState {

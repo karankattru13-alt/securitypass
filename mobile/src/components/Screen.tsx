@@ -32,6 +32,7 @@ const Screen: React.FC<Props> = ({
   const inner = (
     <View
       style={[
+        styles.constrain,
         padded && styles.padded,
         !scroll && styles.flex,
         style,
@@ -71,6 +72,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1 },
   flex: { flex: 1 },
   scrollContent: { flexGrow: 1, paddingBottom: spacing(8) },
+  constrain: { width: '100%', maxWidth: 720, alignSelf: 'center' },
   padded: { padding: spacing(4) },
 });
 

@@ -27,6 +27,18 @@ const GuardHistoryScreen: React.FC<any> = ({ navigation }) => {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [busyId, setBusyId] = useState<number | null>(null);
+
+  const decide = async (id: number, approve: boolean) => {
+    setBusyId(id);
+    try {
+      if (approve) await api.approveVisitor(id);
+      else await api.denyVisitor(id);
+      await load();
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   const load = useCallback(async () => {
     setRefreshing(true);
@@ -96,6 +108,8 @@ const GuardHistoryScreen: React.FC<any> = ({ navigation }) => {
               key={v.id}
               visitor={v}
               onPress={() => navigation.navigate('VisitorDetails', { visitorId: v.id })}
+              onDecide={(approve) => decide(v.id, approve)}
+              deciding={busyId === v.id}
             />
           ))
         )}

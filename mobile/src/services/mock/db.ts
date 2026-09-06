@@ -30,6 +30,8 @@ export interface MockUser {
   shift?: string;
   /** Guards only: whether this guard is currently on duty. */
   on_duty?: boolean;
+  /** Per-user UI preference. */
+  theme?: 'light' | 'dark';
 }
 
 export interface MockVisitor {
