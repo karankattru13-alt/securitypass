@@ -9,6 +9,8 @@ import { RootState, AppDispatch } from '../../store';
 import { logout } from '../../store/slices/authSlice';
 import { confirmSignOut } from '../../components/AppHeader';
 import { appAlert } from '../../components/AppDialog';
+import AccentCard from '../../components/AccentCard';
+import DecisionButtons from '../../components/DecisionButtons';
 import { useAppColors, spacing, radius } from '../../theme';
 import { clockTime, smartDate } from '../../utils/format';
 
@@ -175,51 +177,19 @@ const GuardHomeScreen: React.FC<any> = ({ navigation }) => {
             </Card>
           ) : (
             pending.map((v) => (
-              <Card key={v.id} style={[styles.itemCard, { borderLeftColor: c.warning }]}>
-                <Card.Content>
-                  <View style={styles.itemTop}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.itemName}>{v.name}</Text>
-                      <Text style={styles.itemMeta}>
-                        {v.type} · for {v.resident_name || v.flat} · {clockTime(v.requested_at)}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.actionRow}>
-                    <Button
-                      mode="contained"
-                      compact
-                      icon="check"
-                      buttonColor={c.success}
-                      loading={busyId === v.id}
-                      disabled={busyId === v.id}
-                      onPress={() => act(() => api.approveVisitor(v.id), v.id)}
-                      style={styles.actBtn}
-                    >
-                      Accept
-                    </Button>
-                    <Button
-                      mode="contained"
-                      compact
-                      icon="close"
-                      buttonColor={c.danger}
-                      loading={busyId === v.id}
-                      disabled={busyId === v.id}
-                      onPress={() => act(() => api.denyVisitor(v.id), v.id)}
-                      style={styles.actBtn}
-                    >
-                      Deny
-                    </Button>
-                    <Button
-                      compact
-                      textColor={c.primary}
-                      onPress={() => navigation.navigate('VisitorApproval', { visitorId: v.id })}
-                    >
-                      Open
-                    </Button>
-                  </View>
-                </Card.Content>
-              </Card>
+              <AccentCard key={v.id} accent={c.warning}>
+                <Text style={styles.itemName}>{v.name}</Text>
+                <Text style={styles.itemMeta}>
+                  {v.type} · for {v.resident_name || v.flat} · {clockTime(v.requested_at)}
+                </Text>
+                <DecisionButtons
+                  loading={busyId === v.id}
+                  disabled={busyId === v.id}
+                  onAccept={() => act(() => api.approveVisitor(v.id), v.id)}
+                  onDeny={() => act(() => api.denyVisitor(v.id), v.id)}
+                  onOpen={() => navigation.navigate('VisitorApproval', { visitorId: v.id })}
+                />
+              </AccentCard>
             ))
           )}
 
@@ -233,35 +203,31 @@ const GuardHomeScreen: React.FC<any> = ({ navigation }) => {
             </Card>
           ) : (
             preApproved.map((p) => (
-              <Card key={p.id} style={[styles.itemCard, { borderLeftColor: c.resident }]}>
-                <Card.Content>
-                  <View style={styles.itemTop}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.itemName}>{p.name}</Text>
-                      <Text style={styles.itemMeta}>
-                        {p.flat} · {p.resident_name} · {p.purpose}
-                      </Text>
-                      <Text style={styles.itemSub}>
-                        Valid {p.days} day{p.days === 1 ? '' : 's'} · until {smartDate(p.valid_to)}
-                      </Text>
-                    </View>
-                  </View>
-                  <View style={styles.actionRow}>
-                    <Button
-                      mode="contained"
-                      compact
-                      icon="login-variant"
-                      buttonColor={c.success}
-                      loading={busyId === p.id}
-                      disabled={busyId === p.id}
-                      onPress={() => act(() => api.admitPreApproved(p.id), p.id)}
-                      style={styles.actBtn}
-                    >
-                      Admit
-                    </Button>
-                  </View>
-                </Card.Content>
-              </Card>
+              <AccentCard key={p.id} accent={c.resident}>
+                <Text style={styles.itemName}>{p.name}</Text>
+                <Text style={styles.itemMeta}>
+                  {p.flat} · {p.resident_name} · {p.purpose}
+                </Text>
+                <Text style={styles.itemSub}>
+                  Valid {p.days} day{p.days === 1 ? '' : 's'} · until {smartDate(p.valid_to)}
+                </Text>
+                <View style={styles.singleAction}>
+                  <Button
+                    mode="contained"
+                    icon="login-variant"
+                    buttonColor={c.success}
+                    textColor="#fff"
+                    loading={busyId === p.id}
+                    disabled={busyId === p.id}
+                    onPress={() => act(() => api.admitPreApproved(p.id), p.id)}
+                    style={styles.admitBtn}
+                    contentStyle={styles.admitContent}
+                    labelStyle={styles.admitLabel}
+                  >
+                    Admit visitor
+                  </Button>
+                </View>
+              </AccentCard>
             ))
           )}
 
@@ -275,12 +241,12 @@ const GuardHomeScreen: React.FC<any> = ({ navigation }) => {
             </Card>
           ) : (
             inside.map((v) => (
-              <Card
+              <AccentCard
                 key={v.id}
-                style={[styles.itemCard, { borderLeftColor: c.info }]}
+                accent={c.info}
                 onPress={() => navigation.navigate('VisitorDetails', { visitorId: v.id })}
               >
-                <Card.Content style={styles.insideRow}>
+                <View style={styles.insideRow}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.itemName}>{v.name}</Text>
                     <Text style={styles.itemMeta}>
@@ -288,18 +254,19 @@ const GuardHomeScreen: React.FC<any> = ({ navigation }) => {
                     </Text>
                   </View>
                   <Button
-                    mode="outlined"
-                    compact
+                    mode="contained-tonal"
                     icon="logout-variant"
-                    textColor={c.info}
                     loading={busyId === v.id}
                     disabled={busyId === v.id}
                     onPress={() => act(() => api.markVisitorExited(v.id), v.id)}
+                    style={styles.admitBtn}
+                    contentStyle={styles.admitContent}
+                    labelStyle={styles.admitLabel}
                   >
                     Exit
                   </Button>
-                </Card.Content>
-              </Card>
+                </View>
+              </AccentCard>
             ))
           )}
 
@@ -392,26 +359,22 @@ const makeStyles = (c: Pal) =>
       marginTop: spacing(4),
       marginBottom: spacing(3),
     },
-    emptyCard: { backgroundColor: c.card },
-    emptyText: { color: c.muted, fontSize: 13 },
-    itemCard: {
+    emptyCard: {
       backgroundColor: c.card,
+      borderRadius: radius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.border,
       marginBottom: spacing(3),
-      borderLeftWidth: 4,
     },
-    itemTop: { flexDirection: 'row', alignItems: 'flex-start' },
-    itemName: { fontSize: 15, fontWeight: '700', color: c.text },
-    itemMeta: { fontSize: 12.5, color: c.muted, marginTop: 2, textTransform: 'capitalize' },
-    itemSub: { fontSize: 11.5, color: c.muted, marginTop: 3 },
-    actionRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      flexWrap: 'wrap',
-      gap: spacing(2),
-      marginTop: spacing(3),
-    },
-    actBtn: { borderRadius: radius.sm },
-    insideRow: { flexDirection: 'row', alignItems: 'center' },
+    emptyText: { color: c.muted, fontSize: 13 },
+    itemName: { fontSize: 15.5, fontWeight: '800', color: c.text },
+    itemMeta: { fontSize: 12.5, color: c.muted, marginTop: 3, textTransform: 'capitalize' },
+    itemSub: { fontSize: 11.5, color: c.muted, marginTop: 4 },
+    singleAction: { flexDirection: 'row', marginTop: spacing(3) },
+    admitBtn: { borderRadius: radius.md, elevation: 0 },
+    admitContent: { height: 40, paddingHorizontal: spacing(3) },
+    admitLabel: { fontSize: 13, fontWeight: '700', marginVertical: 0 },
+    insideRow: { flexDirection: 'row', alignItems: 'center', gap: spacing(3) },
     quick: { flexDirection: 'row', gap: spacing(3), marginTop: spacing(5) },
     quickBtn: { flex: 1, borderColor: c.border },
   });

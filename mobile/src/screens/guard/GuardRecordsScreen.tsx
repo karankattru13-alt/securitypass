@@ -172,7 +172,13 @@ const makeStyles = (c: Pal) =>
   StyleSheet.create({
     body: { padding: spacing(4) },
     segment: { marginBottom: spacing(4) },
-    card: { backgroundColor: c.card, marginBottom: spacing(3) },
+    card: {
+      backgroundColor: c.card,
+      marginBottom: spacing(3),
+      borderRadius: 16,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.border,
+    },
     row: { flexDirection: 'row', alignItems: 'flex-start' },
     info: { flex: 1 },
     name: { fontSize: 15, fontWeight: '700', color: c.text },

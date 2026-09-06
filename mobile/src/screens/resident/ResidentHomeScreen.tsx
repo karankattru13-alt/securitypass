@@ -8,6 +8,8 @@ import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
 import VisitorCard from '../../components/VisitorCard';
 import EmptyState from '../../components/EmptyState';
+import AccentCard from '../../components/AccentCard';
+import DecisionButtons from '../../components/DecisionButtons';
 import { useAppColors, spacing, radius } from '../../theme';
 import { timeAgo, smartDate } from '../../utils/format';
 import { RootState } from '../../store';
@@ -161,52 +163,29 @@ const ResidentHomeScreen: React.FC<any> = ({ navigation }) => {
           <EmptyState icon="check-all" title="Nothing pending" message="Visitors at the gate will show up here." />
         ) : (
           pending.map((v) => (
-            <Card key={v.id} style={styles.approvalCard}>
-              <Card.Content>
-                <Text style={styles.name}>{v.name}</Text>
-                <Text style={styles.meta}>
-                  {v.purpose} • {timeAgo(v.requested_at)}
-                </Text>
-                {v.created_by_name ? (
-                  <View style={styles.byRow}>
-                    <MaterialCommunityIcons name="shield-account" size={13} color={c.guard} />
-                    <Text style={styles.byText}>Opened by {v.created_by_name}</Text>
-                  </View>
-                ) : null}
-                <View style={styles.approvalActions}>
-                  <Button
-                    mode="contained"
-                    compact
-                    buttonColor={c.success}
-                    loading={busyId === v.id}
-                    disabled={busyId === v.id}
-                    onPress={() => decide(v.id, true)}
-                    style={styles.approvalBtn}
-                  >
-                    Approve
-                  </Button>
-                  <Button
-                    mode="contained"
-                    compact
-                    buttonColor={c.danger}
-                    loading={busyId === v.id}
-                    disabled={busyId === v.id}
-                    onPress={() => decide(v.id, false)}
-                    style={styles.approvalBtn}
-                  >
-                    Deny
-                  </Button>
-                  <Button
-                    compact
-                    onPress={() =>
-                      navigation.navigate('ResidentVisitorDetails', { visitorId: v.id })
-                    }
-                  >
-                    Details
-                  </Button>
+            <AccentCard key={v.id} accent={c.warning}>
+              <Text style={styles.name}>{v.name}</Text>
+              <Text style={styles.meta}>
+                {v.purpose} • {timeAgo(v.requested_at)}
+              </Text>
+              {v.created_by_name ? (
+                <View style={styles.byRow}>
+                  <MaterialCommunityIcons name="shield-account" size={13} color={c.guard} />
+                  <Text style={styles.byText}>Opened by {v.created_by_name}</Text>
                 </View>
-              </Card.Content>
-            </Card>
+              ) : null}
+              <DecisionButtons
+                acceptLabel="Approve"
+                openLabel="Details"
+                loading={busyId === v.id}
+                disabled={busyId === v.id}
+                onAccept={() => decide(v.id, true)}
+                onDeny={() => decide(v.id, false)}
+                onOpen={() =>
+                  navigation.navigate('ResidentVisitorDetails', { visitorId: v.id })
+                }
+              />
+            </AccentCard>
           ))
         )}
 

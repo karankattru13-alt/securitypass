@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Card, Avatar, Tooltip, Button } from 'react-native-paper';
+import { Card, Avatar, Tooltip } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import StatusPill from './StatusPill';
-import { useAppColors, spacing, radius } from '../theme';
+import DecisionButtons from './DecisionButtons';
+import { useAppColors, spacing } from '../theme';
 import { smartDate } from '../utils/format';
 
 const typeIcon: Record<string, keyof typeof MaterialCommunityIcons.glyphMap> = {
@@ -66,32 +67,12 @@ const VisitorCard: React.FC<Props> = ({ visitor, onPress, onDecide, deciding }) 
         </View>
 
         {onDecide && pending ? (
-          <View style={styles.decideRow}>
-            <Button
-              mode="contained"
-              compact
-              icon="check"
-              buttonColor={c.success}
-              loading={deciding}
-              disabled={deciding}
-              onPress={() => onDecide(true)}
-              style={styles.decideBtn}
-            >
-              Accept
-            </Button>
-            <Button
-              mode="contained"
-              compact
-              icon="close"
-              buttonColor={c.danger}
-              loading={deciding}
-              disabled={deciding}
-              onPress={() => onDecide(false)}
-              style={styles.decideBtn}
-            >
-              Deny
-            </Button>
-          </View>
+          <DecisionButtons
+            loading={deciding}
+            disabled={deciding}
+            onAccept={() => onDecide(true)}
+            onDeny={() => onDecide(false)}
+          />
         ) : null}
       </Card.Content>
     </Card>
@@ -102,18 +83,18 @@ const VisitorCard: React.FC<Props> = ({ visitor, onPress, onDecide, deciding }) 
 
 const makeStyles = (c: ReturnType<typeof useAppColors>) =>
   StyleSheet.create({
-    card: { marginBottom: spacing(3), backgroundColor: c.card },
+    card: {
+      marginBottom: spacing(3),
+      backgroundColor: c.card,
+      borderRadius: 16,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.border,
+    },
     row: { flexDirection: 'row', alignItems: 'center' },
     info: { flex: 1, marginLeft: spacing(3) },
     name: { fontSize: 15, fontWeight: '700', color: c.text },
     meta: { fontSize: 13, color: c.muted, marginTop: 2 },
     time: { fontSize: 11, color: c.muted, marginTop: 2 },
-    decideRow: {
-      flexDirection: 'row',
-      gap: spacing(2),
-      marginTop: spacing(3),
-    },
-    decideBtn: { borderRadius: radius.sm },
   });
 
 export default VisitorCard;
