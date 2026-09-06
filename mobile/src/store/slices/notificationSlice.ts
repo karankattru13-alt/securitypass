@@ -25,7 +25,7 @@ const initialState: NotificationState = {
   error: null,
 };
 
-export const fetchNotifications = createAsyncThunk(
+export const fetchNotifications = createAsyncThunk<Notification[], number | undefined>(
   'notification/fetchNotifications',
   async (limit = 20, { rejectWithValue }) => {
     try {

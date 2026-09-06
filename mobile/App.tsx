@@ -1,12 +1,16 @@
-import React, { useEffect } from 'react';
+import React from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Provider } from 'react-redux';
 import { PaperProvider } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 
 import store from './src/store';
+import { paperTheme, colors } from './src/theme';
 import { useAuth } from './src/hooks/useAuth';
 import { useNotifications } from './src/hooks/useNotifications';
 
@@ -41,236 +45,150 @@ import AdminGuardsScreen from './src/screens/admin/AdminGuardsScreen';
 // Common Screens
 import ProfileScreen from './src/screens/common/ProfileScreen';
 import SettingsScreen from './src/screens/common/SettingsScreen';
+import NotificationsScreen from './src/screens/common/NotificationsScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+const tabScreenOptions =
+  (activeColor: string, icons: Record<string, [string, string]>) =>
+  ({ route }: any) => ({
+    tabBarIcon: ({ focused, color, size }: any) => {
+      const pair = icons[route.name] || ['circle', 'circle-outline'];
+      return (
+        <Icon name={focused ? (pair[0] as any) : (pair[1] as any)} size={size} color={color} />
+      );
+    },
+    tabBarActiveTintColor: activeColor,
+    tabBarInactiveTintColor: '#999',
+    headerShown: false,
+  });
+
 // Guard Navigation
-const GuardNavigator = () => {
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-          if (route.name === 'GuardHome') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'GuardHistory') {
-            iconName = focused ? 'history' : 'history';
-          } else if (route.name === 'Profile') {
-            iconName = focused ? 'account' : 'account-outline';
-          }
-          return <Icon name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: '#2196F3',
-        tabBarInactiveTintColor: '#999',
-        headerShown: false,
-      })}
-    >
-      <Tab.Screen
-        name="GuardHome"
-        component={GuardHomeScreen}
-        options={{ title: 'Home' }}
-      />
-      <Tab.Screen
-        name="GuardHistory"
-        component={GuardHistoryScreen}
-        options={{ title: 'History' }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{ title: 'Profile' }}
-      />
-    </Tab.Navigator>
-  );
-};
+const GuardNavigator = () => (
+  <Tab.Navigator
+    screenOptions={tabScreenOptions(colors.guard, {
+      GuardHome: ['home', 'home-outline'],
+      GuardHistory: ['history', 'history'],
+      Profile: ['account', 'account-outline'],
+    })}
+  >
+    <Tab.Screen name="GuardHome" component={GuardHomeScreen} options={{ title: 'Home' }} />
+    <Tab.Screen name="GuardHistory" component={GuardHistoryScreen} options={{ title: 'History' }} />
+    <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
+  </Tab.Navigator>
+);
 
 // Resident Navigation
-const ResidentNavigator = () => {
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-          if (route.name === 'ResidentHome') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'ResidentHistory') {
-            iconName = focused ? 'history' : 'history';
-          } else if (route.name === 'Profile') {
-            iconName = focused ? 'account' : 'account-outline';
-          }
-          return <Icon name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: '#4CAF50',
-        tabBarInactiveTintColor: '#999',
-        headerShown: false,
-      })}
-    >
-      <Tab.Screen
-        name="ResidentHome"
-        component={ResidentHomeScreen}
-        options={{ title: 'Visitors' }}
-      />
-      <Tab.Screen
-        name="ResidentHistory"
-        component={ResidentHistoryScreen}
-        options={{ title: 'History' }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{ title: 'Profile' }}
-      />
-    </Tab.Navigator>
-  );
-};
+const ResidentNavigator = () => (
+  <Tab.Navigator
+    screenOptions={tabScreenOptions(colors.resident, {
+      ResidentHome: ['home', 'home-outline'],
+      ResidentHistory: ['history', 'history'],
+      Profile: ['account', 'account-outline'],
+    })}
+  >
+    <Tab.Screen name="ResidentHome" component={ResidentHomeScreen} options={{ title: 'Visitors' }} />
+    <Tab.Screen
+      name="ResidentHistory"
+      component={ResidentHistoryScreen}
+      options={{ title: 'History' }}
+    />
+    <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
+  </Tab.Navigator>
+);
 
 // Admin Navigation
-const AdminNavigator = () => {
-  return (
-    <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName;
-          if (route.name === 'AdminDashboard') {
-            iconName = focused ? 'chart-box' : 'chart-box-outline';
-          } else if (route.name === 'AdminSociety') {
-            iconName = focused ? 'home-city' : 'home-city';
-          } else if (route.name === 'Profile') {
-            iconName = focused ? 'account' : 'account-outline';
-          }
-          return <Icon name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: '#FF9800',
-        tabBarInactiveTintColor: '#999',
-        headerShown: false,
-      })}
-    >
-      <Tab.Screen
-        name="AdminDashboard"
-        component={AdminDashboardScreen}
-        options={{ title: 'Dashboard' }}
-      />
-      <Tab.Screen
-        name="AdminSociety"
-        component={AdminSocietyScreen}
-        options={{ title: 'Society' }}
-      />
-      <Tab.Screen
-        name="Profile"
-        component={ProfileScreen}
-        options={{ title: 'Profile' }}
-      />
-    </Tab.Navigator>
-  );
-};
+const AdminNavigator = () => (
+  <Tab.Navigator
+    screenOptions={tabScreenOptions(colors.admin, {
+      AdminDashboard: ['chart-box', 'chart-box-outline'],
+      AdminSociety: ['home-city', 'home-city-outline'],
+      Profile: ['account', 'account-outline'],
+    })}
+  >
+    <Tab.Screen
+      name="AdminDashboard"
+      component={AdminDashboardScreen}
+      options={{ title: 'Dashboard' }}
+    />
+    <Tab.Screen name="AdminSociety" component={AdminSocietyScreen} options={{ title: 'Society' }} />
+    <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
+  </Tab.Navigator>
+);
 
 // Auth Stack
-const AuthNavigator = () => {
-  return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="OTP" component={OTPScreen} />
-      <Stack.Screen name="Register" component={RegisterScreen} />
-    </Stack.Navigator>
-  );
-};
+const AuthNavigator = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="Login" component={LoginScreen} />
+    <Stack.Screen name="OTP" component={OTPScreen} />
+    <Stack.Screen name="Register" component={RegisterScreen} />
+  </Stack.Navigator>
+);
 
 // Root Navigator
 const RootNavigator = () => {
   const { isLoading, user } = useAuth();
-  useNotifications(); // Initialize notifications
+  useNotifications();
 
-  if (isLoading) {
-    return <SplashScreen />;
-  }
+  if (isLoading) return <SplashScreen />;
+  if (!user) return <AuthNavigator />;
 
-  if (!user) {
-    return <AuthNavigator />;
-  }
+  const isGuard = user.role === 'guard' || user.role === 'security_supervisor';
+  const isResident = user.role === 'resident' || user.role === 'staff';
+  const isAdmin = user.role === 'society_admin' || user.role === 'super_admin';
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {user.role === 'guard' && (
+      {isGuard && (
         <Stack.Group>
           <Stack.Screen name="GuardApp" component={GuardNavigator} />
-          <Stack.Screen
-            name="NewVisitor"
-            component={NewVisitorScreen}
-            options={{ presentation: 'modal' }}
-          />
-          <Stack.Screen
-            name="VisitorPhoto"
-            component={VisitorPhotoScreen}
-            options={{ presentation: 'modal' }}
-          />
-          <Stack.Screen
-            name="VisitorDetails"
-            component={VisitorDetailsScreen}
-            options={{ presentation: 'modal' }}
-          />
-          <Stack.Screen
-            name="VisitorApproval"
-            component={VisitorApprovalScreen}
-            options={{ presentation: 'modal' }}
-          />
+          <Stack.Screen name="NewVisitor" component={NewVisitorScreen} />
+          <Stack.Screen name="VisitorPhoto" component={VisitorPhotoScreen} />
+          <Stack.Screen name="VisitorDetails" component={VisitorDetailsScreen} />
+          <Stack.Screen name="VisitorApproval" component={VisitorApprovalScreen} />
         </Stack.Group>
       )}
 
-      {user.role === 'resident' && (
+      {isResident && (
         <Stack.Group>
           <Stack.Screen name="ResidentApp" component={ResidentNavigator} />
-          <Stack.Screen
-            name="VisitorRequest"
-            component={VisitorRequestScreen}
-            options={{ presentation: 'modal' }}
-          />
-          <Stack.Screen
-            name="PreApprovedVisitors"
-            component={PreApprovedVisitorsScreen}
-            options={{ presentation: 'modal' }}
-          />
-          <Stack.Screen
-            name="QRPassGenerator"
-            component={QRPassGeneratorScreen}
-            options={{ presentation: 'modal' }}
-          />
+          <Stack.Screen name="VisitorRequest" component={VisitorRequestScreen} />
+          <Stack.Screen name="ResidentVisitorDetails" component={VisitorDetailsResidentScreen} />
+          <Stack.Screen name="PreApprovedVisitors" component={PreApprovedVisitorsScreen} />
+          <Stack.Screen name="QRPassGenerator" component={QRPassGeneratorScreen} />
         </Stack.Group>
       )}
 
-      {(user.role === 'society_admin' || user.role === 'super_admin') && (
+      {isAdmin && (
         <Stack.Group>
           <Stack.Screen name="AdminApp" component={AdminNavigator} />
-          <Stack.Screen
-            name="AdminResidents"
-            component={AdminResidentsScreen}
-            options={{ presentation: 'modal' }}
-          />
-          <Stack.Screen
-            name="AdminGuards"
-            component={AdminGuardsScreen}
-            options={{ presentation: 'modal' }}
-          />
+          <Stack.Screen name="AdminResidents" component={AdminResidentsScreen} />
+          <Stack.Screen name="AdminGuards" component={AdminGuardsScreen} />
         </Stack.Group>
       )}
 
-      <Stack.Screen
-        name="Settings"
-        component={SettingsScreen}
-        options={{ presentation: 'modal' }}
-      />
+      <Stack.Group screenOptions={{ presentation: 'modal' }}>
+        <Stack.Screen name="Notifications" component={NotificationsScreen} />
+        <Stack.Screen name="Settings" component={SettingsScreen} />
+      </Stack.Group>
     </Stack.Navigator>
   );
 };
 
 export default function App() {
   return (
-    <Provider store={store}>
-      <PaperProvider>
-        <NavigationContainer>
-          <RootNavigator />
-        </NavigationContainer>
-      </PaperProvider>
-    </Provider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Provider store={store}>
+        <SafeAreaProvider>
+          <PaperProvider theme={paperTheme}>
+            <StatusBar style="light" />
+            <NavigationContainer>
+              <RootNavigator />
+            </NavigationContainer>
+          </PaperProvider>
+        </SafeAreaProvider>
+      </Provider>
+    </GestureHandlerRootView>
   );
 }

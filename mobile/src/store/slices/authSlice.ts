@@ -11,6 +11,9 @@ export interface User {
   role: 'super_admin' | 'society_admin' | 'security_supervisor' | 'guard' | 'resident' | 'staff';
   profile_photo?: string;
   is_phone_verified: boolean;
+  flat?: string;
+  gate?: string;
+  shift?: string;
 }
 
 interface AuthState {

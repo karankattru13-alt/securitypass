@@ -1,0 +1,125 @@
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { TextInput, Button, HelperText, Card } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { useDispatch, useSelector } from 'react-redux';
+import Screen from '../../components/Screen';
+import { colors, spacing } from '../../theme';
+import { AppDispatch, RootState } from '../../store';
+import { login, clearError } from '../../store/slices/authSlice';
+
+const DEMO = [
+  { label: 'Guard', phone: '9000000001' },
+  { label: 'Resident', phone: '9000000002' },
+  { label: 'Admin', phone: '9000000003' },
+];
+
+const LoginScreen: React.FC<any> = ({ navigation }) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { loading, error } = useSelector((s: RootState) => s.auth);
+  const [phone, setPhone] = useState('9000000002');
+  const [password, setPassword] = useState('password');
+  const [showPass, setShowPass] = useState(false);
+
+  const submit = () => {
+    dispatch(clearError());
+    dispatch(login({ phone: phone.trim(), password }));
+  };
+
+  return (
+    <Screen>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <View style={styles.brand}>
+          <MaterialCommunityIcons name="shield-home" size={56} color={colors.primary} />
+          <Text style={styles.title}>SocietyPass</Text>
+          <Text style={styles.subtitle}>Sign in to continue</Text>
+        </View>
+
+        <TextInput
+          label="Phone number"
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
+          left={<TextInput.Icon icon="phone" />}
+          style={styles.input}
+          maxLength={10}
+        />
+        <TextInput
+          label="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry={!showPass}
+          left={<TextInput.Icon icon="lock" />}
+          right={
+            <TextInput.Icon
+              icon={showPass ? 'eye-off' : 'eye'}
+              onPress={() => setShowPass((v) => !v)}
+            />
+          }
+          style={styles.input}
+        />
+
+        {error ? (
+          <HelperText type="error" visible>
+            {error}
+          </HelperText>
+        ) : null}
+
+        <Button
+          mode="contained"
+          onPress={submit}
+          loading={loading}
+          disabled={loading || phone.length < 10}
+          style={styles.button}
+        >
+          Sign In
+        </Button>
+
+        <Button
+          mode="text"
+          onPress={() => navigation.navigate('OTP', { phone })}
+          style={styles.linkBtn}
+        >
+          Sign in with OTP
+        </Button>
+        <Button mode="text" onPress={() => navigation.navigate('Register')}>
+          Create a resident account
+        </Button>
+
+        <Card style={styles.demoCard}>
+          <Card.Content>
+            <Text style={styles.demoTitle}>Demo accounts · password "password"</Text>
+            {DEMO.map((d) => (
+              <Text
+                key={d.phone}
+                style={styles.demoRow}
+                onPress={() => {
+                  setPhone(d.phone);
+                  setPassword('password');
+                }}
+              >
+                {d.label}: {d.phone}
+              </Text>
+            ))}
+            <Text style={styles.demoHint}>OTP code in demo mode is always 123456.</Text>
+          </Card.Content>
+        </Card>
+      </KeyboardAvoidingView>
+    </Screen>
+  );
+};
+
+const styles = StyleSheet.create({
+  brand: { alignItems: 'center', marginTop: spacing(8), marginBottom: spacing(6) },
+  title: { fontSize: 26, fontWeight: '800', color: colors.text, marginTop: spacing(2) },
+  subtitle: { fontSize: 14, color: colors.muted, marginTop: 2 },
+  input: { marginBottom: spacing(3), backgroundColor: colors.card },
+  button: { marginTop: spacing(2), paddingVertical: spacing(1) },
+  linkBtn: { marginTop: spacing(2) },
+  demoCard: { marginTop: spacing(6), backgroundColor: '#EEF2FF' },
+  demoTitle: { fontWeight: '700', color: colors.text, marginBottom: spacing(2) },
+  demoRow: { color: colors.primary, paddingVertical: 3, fontWeight: '600' },
+  demoHint: { color: colors.muted, marginTop: spacing(2), fontSize: 12 },
+});
+
+export default LoginScreen;

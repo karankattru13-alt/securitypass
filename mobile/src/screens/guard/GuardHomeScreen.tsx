@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Text, StyleSheet, Alert, Platform } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Card, Button, Badge, ActivityIndicator } from 'react-native-paper';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
 import api from '../../services/api';
 import { RootState } from '../../store';
 
@@ -38,6 +39,28 @@ const GuardHomeScreen: React.FC<any> = ({ navigation }) => {
     const interval = setInterval(loadData, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  // Refresh whenever the screen regains focus (e.g. after registering a visitor)
+  useFocusEffect(
+    React.useCallback(() => {
+      loadData();
+    }, [])
+  );
+
+  const handleExit = async (visitorId: number) => {
+    try {
+      await api.markVisitorExited(visitorId);
+      loadData();
+    } catch (error) {
+      console.error('Error marking exit:', error);
+    }
+  };
+
+  const handleEmergency = () => {
+    const msg = 'This would alert the security supervisor and control room.';
+    if (Platform.OS === 'web') window.alert(`Emergency alert\n\n${msg}`);
+    else Alert.alert('Emergency alert', msg);
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -118,17 +141,26 @@ const GuardHomeScreen: React.FC<any> = ({ navigation }) => {
           <Text style={styles.buttonText}>NEW VISITOR</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.largeButton, styles.secondaryButton]}>
-          <Icon name="package" size={40} color="#fff" />
+        <TouchableOpacity
+          style={[styles.largeButton, styles.secondaryButton]}
+          onPress={() => navigation.navigate('NewVisitor', { type: 'delivery' })}
+        >
+          <Icon name="package-variant-closed" size={40} color="#fff" />
           <Text style={styles.buttonText}>DELIVERY</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.largeButton, styles.secondaryButton]}>
+        <TouchableOpacity
+          style={[styles.largeButton, styles.secondaryButton]}
+          onPress={() => navigation.navigate('NewVisitor', { type: 'staff' })}
+        >
           <Icon name="account-multiple" size={40} color="#fff" />
           <Text style={styles.buttonText}>STAFF</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.largeButton, styles.warningButton]}>
+        <TouchableOpacity
+          style={[styles.largeButton, styles.warningButton]}
+          onPress={handleEmergency}
+        >
           <Icon name="alert-circle" size={40} color="#fff" />
           <Text style={styles.buttonText}>EMERGENCY</Text>
         </TouchableOpacity>
@@ -172,14 +204,23 @@ const GuardHomeScreen: React.FC<any> = ({ navigation }) => {
             Currently Inside ({currentVisitors.length})
           </Text>
           {currentVisitors.map((visitor) => (
-            <Card key={visitor.id} style={styles.visitorCard}>
+            <Card
+              key={visitor.id}
+              style={styles.visitorCard}
+              onPress={() =>
+                navigation.navigate('VisitorDetails', { visitorId: visitor.id })
+              }
+            >
               <Card.Content style={styles.visitorCardContent}>
                 <View style={styles.visitorInfo}>
                   <Text style={styles.visitorName}>{visitor.name}</Text>
                   <Text style={styles.visitorFlat}>{visitor.flat}</Text>
                 </View>
-                <TouchableOpacity style={styles.exitButton}>
-                  <Icon name="check-circle" size={24} color="#4CAF50" />
+                <TouchableOpacity
+                  style={styles.exitButton}
+                  onPress={() => handleExit(visitor.id)}
+                >
+                  <Icon name="logout-variant" size={24} color="#4CAF50" />
                 </TouchableOpacity>
               </Card.Content>
             </Card>
@@ -200,10 +241,11 @@ const GuardHomeScreen: React.FC<any> = ({ navigation }) => {
         </Button>
         <Button
           mode="outlined"
-          icon="account-search"
+          icon="bell-outline"
+          onPress={() => navigation.navigate('Notifications')}
           style={styles.quickActionButton}
         >
-          Search Resident
+          Notifications
         </Button>
       </View>
     </ScrollView>

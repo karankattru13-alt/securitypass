@@ -1,7 +1,14 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import mockClient from './mock/mockClient';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL ||
+  process.env.REACT_APP_API_URL ||
+  'http://localhost:8000/api';
+
+/** Default: run against the built-in mock backend so the app works with no server. */
+const USE_MOCK = (process.env.EXPO_PUBLIC_USE_MOCK ?? 'true') !== 'false';
 
 class APIClient {
   private client: AxiosInstance;
@@ -105,7 +112,7 @@ class APIClient {
 
   async uploadVisitorPhoto(visitorId: number, photoUri: string, photoType: string) {
     const formData = new FormData();
-    formData.append('visitor', visitorId);
+    formData.append('visitor', String(visitorId));
     formData.append('photo_type', photoType);
 
     const response = await fetch(photoUri);
@@ -219,4 +226,8 @@ class APIClient {
   }
 }
 
-export default new APIClient();
+const apiClient = USE_MOCK
+  ? (mockClient as unknown as APIClient)
+  : new APIClient();
+
+export default apiClient;
