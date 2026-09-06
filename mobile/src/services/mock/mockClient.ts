@@ -148,6 +148,7 @@ class MockAPIClient {
       resident_name: targetResident
         ? `${targetResident.first_name} ${targetResident.last_name}`
         : visitorData.resident_name || '',
+      resident_phone: targetResident?.phone,
       resident_id: targetResident?.id,
       vehicle_number: visitorData.vehicle_number || undefined,
       photo: visitorData.photo || null,

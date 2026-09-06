@@ -5,6 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
 import EmptyState from '../../components/EmptyState';
+import ExportButton from '../../components/ExportButton';
 import { useAppColors, spacing } from '../../theme';
 import { initials } from '../../utils/format';
 import api from '../../services/api';
@@ -81,6 +82,16 @@ const AdminResidentsScreen: React.FC<any> = ({ navigation }) => {
           <Chip icon="home-alert" style={styles.chip}>
             {residents.length - withFlat} pending
           </Chip>
+          <ExportButton
+            filename="residents"
+            rows={() => filtered}
+            columns={[
+              { key: 'name', label: 'Name' },
+              { key: 'phone', label: 'Phone' },
+              { key: 'email', label: 'Email' },
+              { key: 'flat', label: 'House / Flat' },
+            ]}
+          />
         </View>
 
         {loading ? (
@@ -123,7 +134,13 @@ const makeStyles = (c: Pal) =>
   StyleSheet.create({
   body: { padding: spacing(4) },
   search: { marginBottom: spacing(3), backgroundColor: c.card },
-  chips: { flexDirection: 'row', gap: spacing(2), marginBottom: spacing(3) },
+  chips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: spacing(2),
+    marginBottom: spacing(3),
+  },
   chip: { backgroundColor: c.card },
   card: { backgroundColor: c.card },
   row: { flexDirection: 'row', alignItems: 'center', padding: spacing(3) },

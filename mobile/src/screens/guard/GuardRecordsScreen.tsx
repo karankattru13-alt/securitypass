@@ -7,6 +7,7 @@ import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
 import EmptyState from '../../components/EmptyState';
 import StatusPill from '../../components/StatusPill';
+import ExportButton from '../../components/ExportButton';
 import { useAppColors, spacing, radius, prettyStatus } from '../../theme';
 import { smartDate } from '../../utils/format';
 import api from '../../services/api';
@@ -67,6 +68,43 @@ const GuardRecordsScreen: React.FC<any> = ({ navigation }) => {
           ]}
           style={styles.segment}
         />
+        <View style={styles.exportRow}>
+          {tab === 'mine' ? (
+            <ExportButton
+              filename="my-guard-requests"
+              rows={() => records}
+              columns={[
+                { key: 'name', label: 'Visitor' },
+                { key: 'phone', label: 'Phone' },
+                { key: 'flat', label: 'Flat' },
+                { key: 'resident_name', label: 'Resident' },
+                { key: 'purpose', label: 'Purpose' },
+                { key: 'my_role', label: 'My action' },
+                { key: 'status', label: 'Status' },
+                { key: 'requested_at', label: 'Requested' },
+                { key: 'entry_time', label: 'Entered' },
+                { key: 'exit_time', label: 'Exited' },
+              ]}
+            />
+          ) : (
+            <ExportButton
+              filename="pre-approved-visitors"
+              rows={() => preApproved}
+              columns={[
+                { key: 'name', label: 'Visitor' },
+                { key: 'phone', label: 'Phone' },
+                { key: 'flat', label: 'Flat' },
+                { key: 'resident_name', label: 'Resident' },
+                { key: 'purpose', label: 'Purpose' },
+                { key: 'days', label: 'Days valid' },
+                { key: 'valid_from', label: 'From' },
+                { key: 'valid_to', label: 'To' },
+                { key: 'status', label: 'Status' },
+                { key: 'cancelled_reason', label: 'Removed reason' },
+              ]}
+            />
+          )}
+        </View>
 
         {loading ? (
           <ActivityIndicator color={c.guard} style={{ marginTop: spacing(8) }} />
@@ -171,7 +209,8 @@ const GuardRecordsScreen: React.FC<any> = ({ navigation }) => {
 const makeStyles = (c: Pal) =>
   StyleSheet.create({
     body: { padding: spacing(4) },
-    segment: { marginBottom: spacing(4) },
+    segment: { marginBottom: spacing(3) },
+    exportRow: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing(3) },
     card: {
       backgroundColor: c.card,
       marginBottom: spacing(3),

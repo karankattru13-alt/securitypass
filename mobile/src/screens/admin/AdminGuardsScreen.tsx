@@ -5,6 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
 import EmptyState from '../../components/EmptyState';
+import ExportButton from '../../components/ExportButton';
 import { useAppColors, spacing } from '../../theme';
 import { initials } from '../../utils/format';
 import api from '../../services/api';
@@ -72,6 +73,21 @@ const AdminGuardsScreen: React.FC<any> = ({ navigation }) => {
         onBack={() => navigation.goBack()}
       />
       <View style={styles.body}>
+        {guards.length > 0 && (
+          <View style={styles.exportRow}>
+            <ExportButton
+              filename="security-staff"
+              rows={() => guards}
+              columns={[
+                { key: 'name', label: 'Name' },
+                { key: 'phone', label: 'Phone' },
+                { key: 'gate', label: 'Gate' },
+                { key: 'shift', label: 'Shift' },
+                { key: 'on_duty', label: 'On duty', map: (g) => (g.on_duty ? 'yes' : 'no') },
+              ]}
+            />
+          </View>
+        )}
         {loading ? (
           <ActivityIndicator color={c.admin} style={{ marginTop: spacing(10) }} />
         ) : guards.length === 0 ? (
@@ -118,6 +134,7 @@ const AdminGuardsScreen: React.FC<any> = ({ navigation }) => {
 const makeStyles = (c: Pal) =>
   StyleSheet.create({
     body: { padding: spacing(4) },
+    exportRow: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing(3) },
     card: { backgroundColor: c.card },
     row: { flexDirection: 'row', alignItems: 'center', padding: spacing(3) },
     info: { flex: 1, marginLeft: spacing(3) },

@@ -49,6 +49,14 @@ Flat number**; only then do they appear in the admin residents list, the guard's
 - **Admin**: society dashboard with an **On duty now** guard list; resident
   directory with house numbers; **security staff roster** wired to live data
   with per-guard on-duty toggles.
+- **CSV export**: guard History & Records and the admin Residents / Society /
+  Staff screens each have an **Export CSV** button (real file download on web;
+  share sheet on native).
+- **WhatsApp alerts**: when a guard raises a request the app offers to WhatsApp
+  the resident's registered number with the visitor details and an approve /
+  deny deep link (`societypass://request/<id>`, or your hosted web URL via
+  `EXPO_PUBLIC_APP_URL`). A manual "Send WhatsApp" button is on the approval
+  screen too.
 - **Shared**: notifications centre (polled), profile, settings, light/dark
   preference, one-tap **reset demo data**.
 

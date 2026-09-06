@@ -8,6 +8,10 @@ import StatusPill from '../../components/StatusPill';
 import { useAppColors, spacing, radius } from '../../theme';
 import { smartDate } from '../../utils/format';
 import api from '../../services/api';
+import {
+  buildRequestMessage,
+  notifyResidentOnWhatsApp,
+} from '../../utils/whatsapp';
 
 type Pal = ReturnType<typeof useAppColors>;
 
@@ -140,6 +144,28 @@ const VisitorApprovalScreen: React.FC<any> = ({ navigation, route }) => {
                 Deny
               </Button>
             </View>
+            {visitor.resident_phone ? (
+              <Button
+                mode="contained-tonal"
+                icon="whatsapp"
+                disabled={busy}
+                onPress={() =>
+                  notifyResidentOnWhatsApp(
+                    visitor.resident_phone,
+                    buildRequestMessage({
+                      visitorId: visitor.id,
+                      visitorName: visitor.name,
+                      purpose: visitor.purpose,
+                      flat: visitor.flat,
+                      guardName: visitor.created_by_name,
+                    })
+                  )
+                }
+                style={styles.next}
+              >
+                Send WhatsApp to {visitor.resident_name || 'resident'}
+              </Button>
+            ) : null}
             <Button
               mode="outlined"
               icon="account-arrow-right-outline"
@@ -152,8 +178,9 @@ const VisitorApprovalScreen: React.FC<any> = ({ navigation, route }) => {
               Let the resident decide
             </Button>
             <Text style={styles.hint}>
-              Leaves the request pending. The resident is asked to approve, and it
-              stays on your Home screen with Accept / Deny in case you need to act.
+              Leaves the request pending. The resident is asked to approve on
+              WhatsApp and in the app, and it stays on your Home screen with
+              Accept / Deny in case you need to act.
             </Text>
           </>
         ) : approved && visitor.status !== 'entered' ? (

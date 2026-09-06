@@ -59,6 +59,8 @@ export interface MockVisitor {
   approval_status: 'pending' | 'approved' | 'denied';
   flat: string;
   resident_name: string;
+  /** Registered phone of the addressed resident (for WhatsApp alerts). */
+  resident_phone?: string;
   vehicle_number?: string;
   photo?: string | null;
   remarks?: string;

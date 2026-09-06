@@ -196,13 +196,30 @@ const RootNavigator = () => {
   );
 };
 
+const linking = {
+  prefixes: [
+    'societypass://',
+    ...(process.env.EXPO_PUBLIC_APP_URL &&
+    process.env.EXPO_PUBLIC_APP_URL !== 'societypass://'
+      ? [process.env.EXPO_PUBLIC_APP_URL]
+      : []),
+  ],
+  // A WhatsApp "approve / deny" link is societypass://request/<id>.
+  config: {
+    screens: {
+      ResidentVisitorDetails: 'request/:visitorId',
+      VisitorDetails: 'g/request/:visitorId',
+    },
+  },
+};
+
 const ThemedApp = () => {
   useThemeSync();
   const { paper, nav } = useThemeBundle();
   return (
     <PaperProvider theme={paper}>
       <StatusBar style="light" />
-      <NavigationContainer theme={nav}>
+      <NavigationContainer theme={nav} linking={linking}>
         <RootNavigator />
       </NavigationContainer>
       <AppDialogHost />

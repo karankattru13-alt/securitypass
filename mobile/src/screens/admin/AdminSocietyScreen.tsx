@@ -6,6 +6,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
 import EmptyState from '../../components/EmptyState';
+import ExportButton from '../../components/ExportButton';
 import { useAppColors, spacing } from '../../theme';
 import api from '../../services/api';
 
@@ -76,6 +77,21 @@ const AdminSocietyScreen: React.FC<any> = ({ navigation }) => {
           </Card.Content>
         </Card>
 
+        {flats.length > 0 && (
+          <View style={styles.exportRow}>
+            <ExportButton
+              filename="society-flats"
+              rows={() => flats}
+              columns={[
+                { key: 'number', label: 'Flat' },
+                { key: 'tower', label: 'Tower' },
+                { key: 'resident_name', label: 'Resident' },
+                { key: 'resident_phone', label: 'Phone' },
+              ]}
+            />
+          </View>
+        )}
+
         {flats.length > 1 && (
           <View style={styles.chips}>
             {towers.map((t) => (
@@ -122,6 +138,7 @@ const makeStyles = (c: Pal) =>
   StyleSheet.create({
   body: { padding: spacing(4) },
   card: { backgroundColor: c.card, marginBottom: spacing(4) },
+  exportRow: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing(3) },
   row: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing(2) },
   rowText: { marginLeft: spacing(2), color: c.text, fontSize: 14, flex: 1 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: spacing(3) },

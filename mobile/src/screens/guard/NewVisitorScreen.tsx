@@ -9,13 +9,18 @@ import {
   ActivityIndicator,
 } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
 import { useAppColors, spacing, radius } from '../../theme';
-import { AppDispatch } from '../../store';
+import { AppDispatch, RootState } from '../../store';
 import { createVisitor } from '../../store/slices/visitorSlice';
 import api from '../../services/api';
+import {
+  buildRequestMessage,
+  notifyResidentOnWhatsApp,
+} from '../../utils/whatsapp';
+import { appConfirm } from '../../components/AppDialog';
 
 type Pal = ReturnType<typeof useAppColors>;
 
@@ -37,6 +42,7 @@ const NewVisitorScreen: React.FC<any> = ({ navigation, route }) => {
   const c = useAppColors();
   const styles = React.useMemo(() => makeStyles(c), [c]);
   const dispatch = useDispatch<AppDispatch>();
+  const me = useSelector((s: RootState) => s.auth.user);
   const [type, setType] = useState<string>(route.params?.type ?? 'guest');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -94,6 +100,33 @@ const NewVisitorScreen: React.FC<any> = ({ navigation, route }) => {
           vehicle_number: vehicle.trim() || undefined,
         })
       ).unwrap();
+
+      // Notify the resident on WhatsApp with an approve / deny link.
+      const residentPhone = res.resident_phone || selected.phone;
+      if (residentPhone) {
+        const send = await appConfirm({
+          title: 'Notify resident on WhatsApp?',
+          message: `Send ${selected.name} a WhatsApp message with the visitor details and an approve / deny link.`,
+          confirmLabel: 'Send',
+          cancelLabel: 'Skip',
+          tone: 'success',
+          icon: 'whatsapp',
+        });
+        if (send) {
+          await notifyResidentOnWhatsApp(
+            residentPhone,
+            buildRequestMessage({
+              visitorId: res.id,
+              visitorName: res.name,
+              purpose: res.purpose,
+              flat: res.flat || selected.flat,
+              guardName: me ? `${me.first_name} ${me.last_name}` : undefined,
+              gate: me?.gate,
+            })
+          );
+        }
+      }
+
       navigation.replace('VisitorPhoto', { visitorId: res.id });
     } catch (e: any) {
       setError(typeof e === 'string' ? e : 'Could not register visitor.');

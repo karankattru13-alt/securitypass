@@ -6,10 +6,27 @@ import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
 import VisitorCard from '../../components/VisitorCard';
 import EmptyState from '../../components/EmptyState';
+import ExportButton from '../../components/ExportButton';
 import { useAppColors, spacing } from '../../theme';
 import api from '../../services/api';
 
 type Pal = ReturnType<typeof useAppColors>;
+
+const VISITOR_COLUMNS = [
+  { key: 'name', label: 'Visitor' },
+  { key: 'phone', label: 'Phone' },
+  { key: 'type', label: 'Type' },
+  { key: 'purpose', label: 'Purpose' },
+  { key: 'flat', label: 'Flat' },
+  { key: 'resident_name', label: 'Resident' },
+  { key: 'status', label: 'Status' },
+  { key: 'approval_status', label: 'Approval' },
+  { key: 'requested_at', label: 'Requested' },
+  { key: 'entry_time', label: 'Entered' },
+  { key: 'exit_time', label: 'Exited' },
+  { key: 'created_by_name', label: 'Opened by' },
+  { key: 'approved_by_name', label: 'Decided by' },
+];
 
 const FILTERS = [
   { key: 'all', label: 'All' },
@@ -85,6 +102,13 @@ const GuardHistoryScreen: React.FC<any> = ({ navigation }) => {
           onChangeText={setQuery}
           style={styles.search}
         />
+        <View style={styles.exportRow}>
+          <ExportButton
+            filename="visitor-history"
+            rows={() => filtered}
+            columns={VISITOR_COLUMNS}
+          />
+        </View>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -126,7 +150,8 @@ const GuardHistoryScreen: React.FC<any> = ({ navigation }) => {
 const makeStyles = (c: Pal) =>
   StyleSheet.create({
   body: { padding: spacing(4) },
-  search: { marginBottom: spacing(3), backgroundColor: c.card },
+  search: { marginBottom: spacing(2), backgroundColor: c.card },
+  exportRow: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: spacing(2) },
   chips: { paddingBottom: spacing(3) },
   chip: { marginRight: spacing(2) },
 });
