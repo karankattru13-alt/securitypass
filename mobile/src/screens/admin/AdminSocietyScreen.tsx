@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
+import EmptyState from '../../components/EmptyState';
 import { useAppColors, spacing } from '../../theme';
 import api from '../../services/api';
 
@@ -75,32 +76,42 @@ const AdminSocietyScreen: React.FC<any> = ({ navigation }) => {
           </Card.Content>
         </Card>
 
-        <View style={styles.chips}>
-          {towers.map((t) => (
-            <Chip
-              key={t}
-              selected={tower === t}
-              onPress={() => setTower(t)}
-              style={styles.chip}
-              showSelectedCheck={false}
-            >
-              {t === 'All' ? 'All' : `Tower ${t}`}
-            </Chip>
-          ))}
-        </View>
+        {flats.length > 1 && (
+          <View style={styles.chips}>
+            {towers.map((t) => (
+              <Chip
+                key={t}
+                selected={tower === t}
+                onPress={() => setTower(t)}
+                style={styles.chip}
+                showSelectedCheck={false}
+              >
+                {t === 'All' ? 'All' : `Tower ${t}`}
+              </Chip>
+            ))}
+          </View>
+        )}
 
-        <Card style={styles.card}>
-          {shown.map((f, i) => (
-            <React.Fragment key={f.id}>
-              <List.Item
-                title={f.number}
-                description={`${f.resident_name} · ${f.members} members`}
-                left={(p) => <List.Icon {...p} icon="door" />}
-              />
-              {i < shown.length - 1 && <Divider />}
-            </React.Fragment>
-          ))}
-        </Card>
+        {shown.length === 0 ? (
+          <EmptyState
+            icon="home-plus-outline"
+            title="No flats yet"
+            message="Flats appear here as residents sign up and set their house number."
+          />
+        ) : (
+          <Card style={styles.card}>
+            {shown.map((f, i) => (
+              <React.Fragment key={f.id}>
+                <List.Item
+                  title={f.number}
+                  description={f.resident_name}
+                  left={(p) => <List.Icon {...p} icon="door" />}
+                />
+                {i < shown.length - 1 && <Divider />}
+              </React.Fragment>
+            ))}
+          </Card>
+        )}
       </View>
     </Screen>
   );

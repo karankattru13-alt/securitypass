@@ -15,23 +15,20 @@ npm run web        # open http://localhost:19006  (also: npm run android / npm r
 > Requires Node 16.13+ (Node 18+ recommended). If `npm install` complains about
 > peer versions on newer setups, run `npx expo install --fix`.
 
-## Demo accounts
+## Starting accounts
 
-| Role     | Phone        | Password   | Notes                       |
-|----------|--------------|------------|-----------------------------|
-| Guard    | `9000000001` | `password` | Ravi Kumar · Main Gate · on duty |
-| Guard    | `9000000006` | `password` | Sunil Yadav · Service Gate · off duty |
-| Resident | `9000000002` | `password` | Priya Sharma · flat A-1203  |
-| Resident | `9000000004` | `password` | Amit Patel · flat B-101     |
-| Resident | `9000000005` | `password` | Sneha Nair · flat C-202     |
-| Admin    | `9000000003` | `password` |                             |
+Only two operational accounts are seeded — everything else (residents, extra
+guards, visitors, pre-approved passes, flats) comes from real use.
 
-New residents who sign up via OTP have **no house number** until they set one in
-**Profile → House / Flat number** (until then they show as "pending" in the admin
-residents list and cannot pre-clear their own guests).
+| Role  | Phone        | Password   | Notes                    |
+|-------|--------------|------------|--------------------------|
+| Guard | `9000000001` | `password` | Ravi Kumar · Main Gate   |
+| Admin | `9000000003` | `password` | Anil Mehta               |
 
-OTP sign-in / registration also works — the demo code is always **`123456`**.
-Tap a role on the login screen to auto-fill it.
+**Residents and additional guards sign up** from the login screen (OTP flow, demo
+code **`123456`**). A new resident sets their house number in **Profile → House /
+Flat number**; only then do they appear in the admin residents list, the guard's
+"who is this visitor for?" picker, and the society flats list.
 
 ## What works
 

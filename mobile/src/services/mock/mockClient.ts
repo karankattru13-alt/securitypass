@@ -11,6 +11,7 @@ import {
   nextId,
   MockUser,
   MockVisitor,
+  MockDB,
 } from './db';
 
 const ok = <T>(data: T) => Promise.resolve({ data, status: 200 });
@@ -552,16 +553,47 @@ class MockAPIClient {
   }
 
   // ---- Society / flats ---------------------------------------
+  /** Flats are derived from registered residents who have set a house number. */
+  private flatList(db: MockDB) {
+    return db.users
+      .filter((u) => (u.role === 'resident' || u.role === 'staff') && u.flat)
+      .map((u) => ({
+        id: u.id,
+        number: u.flat as string,
+        tower: String(u.flat).split('-')[0].replace(/[^A-Za-z]/g, '') || '—',
+        resident_name: `${u.first_name} ${u.last_name}`.trim(),
+        resident_phone: u.phone,
+        members: 1,
+      }))
+      .sort((a, b) => a.number.localeCompare(b.number));
+  }
+
+  private societyInfo(db: MockDB) {
+    const flats = this.flatList(db);
+    const towers = [...new Set(flats.map((f) => f.tower))].filter((t) => t && t !== '—').sort();
+    return {
+      ...db.society,
+      total_flats: flats.length,
+      total_residents: db.users.filter(
+        (u) => u.role === 'resident' || u.role === 'staff'
+      ).length,
+      total_guards: db.users.filter(
+        (u) => u.role === 'guard' || u.role === 'security_supervisor'
+      ).length,
+      towers,
+    };
+  }
+
   async getSociety(_societyId: number) {
     await delay(140);
     const db = await getDb();
-    return ok(db.society);
+    return ok(this.societyInfo(db));
   }
 
   async getSocietyFlats(_societyId: number) {
     await delay(160);
     const db = await getDb();
-    return ok(db.flats);
+    return ok(this.flatList(db));
   }
 
   async searchFlat(_societyId: number, query: string) {
@@ -569,7 +601,7 @@ class MockAPIClient {
     const db = await getDb();
     const q = (query || '').toLowerCase();
     return ok(
-      db.flats.filter(
+      this.flatList(db).filter(
         (f) =>
           f.number.toLowerCase().includes(q) ||
           f.resident_name.toLowerCase().includes(q)

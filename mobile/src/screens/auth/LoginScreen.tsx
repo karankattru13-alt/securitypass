@@ -12,7 +12,6 @@ type Pal = ReturnType<typeof useAppColors>;
 
 const DEMO = [
   { label: 'Guard', phone: '9000000001' },
-  { label: 'Resident', phone: '9000000002' },
   { label: 'Admin', phone: '9000000003' },
 ];
 
@@ -21,7 +20,7 @@ const LoginScreen: React.FC<any> = ({ navigation }) => {
   const styles = React.useMemo(() => makeStyles(c), [c]);
   const dispatch = useDispatch<AppDispatch>();
   const { loading, error } = useSelector((s: RootState) => s.auth);
-  const [phone, setPhone] = useState('9000000002');
+  const [phone, setPhone] = useState('9000000001');
   const [password, setPassword] = useState('password');
   const [showPass, setShowPass] = useState(false);
 
@@ -106,7 +105,7 @@ const LoginScreen: React.FC<any> = ({ navigation }) => {
 
         <Card style={styles.demoCard}>
           <Card.Content>
-            <Text style={styles.demoTitle}>Demo accounts · password "password"</Text>
+            <Text style={styles.demoTitle}>Starting accounts · password "password"</Text>
             {DEMO.map((d) => (
               <Text
                 key={d.phone}
@@ -119,7 +118,9 @@ const LoginScreen: React.FC<any> = ({ navigation }) => {
                 {d.label}: {d.phone}
               </Text>
             ))}
-            <Text style={styles.demoHint}>OTP code in demo mode is always 123456.</Text>
+            <Text style={styles.demoHint}>
+              Residents &amp; other guards sign up. OTP code is always 123456.
+            </Text>
           </Card.Content>
         </Card>
       </KeyboardAvoidingView>
