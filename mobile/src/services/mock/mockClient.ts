@@ -553,6 +553,168 @@ class MockAPIClient {
     return ok({ id: callId, status: 'ended', duration_seconds: durationSeconds });
   }
 
+  // ---- Admin CRUD ------------------------------------------
+  private assertAdmin(me: MockUser | null) {
+    if (!me || (me.role !== 'society_admin' && me.role !== 'super_admin')) {
+      throw new ApiError(403, 'Admin access required.');
+    }
+  }
+
+  async adminCreateUser(data: any) {
+    await delay();
+    const db = await getDb();
+    this.assertAdmin(await currentUser());
+    const phone = String(data.phone || '').replace(/\D/g, '');
+    if (phone.length !== 10) throw new ApiError(400, 'Enter a 10-digit phone number.');
+    if (db.users.some((u) => u.phone === phone)) {
+      throw new ApiError(400, 'That phone number is already registered.');
+    }
+    const role: MockUser['role'] =
+      data.role === 'guard'
+        ? 'guard'
+        : data.role === 'society_admin'
+        ? 'society_admin'
+        : 'resident';
+    const user: MockUser = {
+      id: nextId(db),
+      phone,
+      password: data.password || 'password',
+      first_name: (data.first_name || '').trim(),
+      last_name: (data.last_name || '').trim(),
+      email: data.email || `${phone}@societypass.app`,
+      role,
+      is_phone_verified: true,
+      ...(data.flat ? { flat: String(data.flat).trim().toUpperCase() } : {}),
+      ...(role === 'guard'
+        ? {
+            gate: data.gate || 'Main Gate',
+            shift: data.duty_shift === 'night' ? 'Night Shift' : 'Day Shift',
+            on_duty: data.on_duty === true || data.on_duty === 'true',
+            duty_shift: data.duty_shift === 'night' ? 'night' : 'day',
+          }
+        : {}),
+    };
+    db.users.push(user);
+    await persist();
+    return ok(publicUser(user));
+  }
+
+  async adminUpdateUser(id: number, patch: any) {
+    await delay();
+    const db = await getDb();
+    this.assertAdmin(await currentUser());
+    const idx = db.users.findIndex((u) => u.id === Number(id));
+    if (idx === -1) throw new ApiError(404, 'User not found.');
+    const next = { ...patch };
+    if (next.phone !== undefined) {
+      next.phone = String(next.phone).replace(/\D/g, '');
+      if (next.phone.length !== 10) throw new ApiError(400, 'Enter a 10-digit phone number.');
+      if (db.users.some((u) => u.phone === next.phone && u.id !== Number(id))) {
+        throw new ApiError(400, 'That phone number is already registered.');
+      }
+    }
+    if (next.flat !== undefined) next.flat = String(next.flat).trim().toUpperCase();
+    if (next.duty_shift) {
+      next.duty_shift = next.duty_shift === 'night' ? 'night' : 'day';
+      next.shift = next.duty_shift === 'night' ? 'Night Shift' : 'Day Shift';
+    }
+    delete next.id;
+    delete next.role; // role changes are out of scope
+    db.users[idx] = { ...db.users[idx], ...next };
+    await persist();
+    return ok(publicUser(db.users[idx]));
+  }
+
+  async adminDeleteUser(id: number) {
+    await delay();
+    const db = await getDb();
+    const me = await currentUser();
+    this.assertAdmin(me);
+    const idx = db.users.findIndex((u) => u.id === Number(id));
+    if (idx === -1) throw new ApiError(404, 'User not found.');
+    const target = db.users[idx];
+    if (target.id === me!.id) throw new ApiError(400, 'You cannot delete your own account.');
+    if (
+      (target.role === 'society_admin' || target.role === 'super_admin') &&
+      db.users.filter((u) => u.role === 'society_admin' || u.role === 'super_admin').length <= 1
+    ) {
+      throw new ApiError(400, 'Cannot delete the last admin account.');
+    }
+    db.users.splice(idx, 1);
+    await persist();
+    return ok({ detail: 'User deleted', id: Number(id) });
+  }
+
+  async adminCreateVisitor(data: any) {
+    await delay();
+    const db = await getDb();
+    this.assertAdmin(await currentUser());
+    const now = new Date().toISOString();
+    const resident =
+      (data.resident_id && db.users.find((u) => u.id === Number(data.resident_id))) ||
+      db.users.find(
+        (u) => (u.role === 'resident' || u.role === 'staff') && u.flat === data.flat
+      );
+    const name = data.name || 'Visitor';
+    const approvalStatus =
+      data.approval_status || (data.status === 'approved' || data.status === 'entered' ? 'approved' : 'pending');
+    const visitor: MockVisitor = {
+      id: nextId(db),
+      name,
+      visitor_name: name,
+      phone: data.phone || '',
+      purpose: data.purpose || 'Visit',
+      type: data.type || 'guest',
+      status: data.status || 'waiting',
+      approval_status: approvalStatus,
+      flat: (data.flat || resident?.flat || '').toUpperCase(),
+      resident_name: resident
+        ? `${resident.first_name} ${resident.last_name}`
+        : data.resident_name || '',
+      resident_phone: resident?.phone,
+      resident_id: resident?.id,
+      vehicle_number: data.vehicle_number || undefined,
+      photo: null,
+      requested_at: data.requested_at || now,
+      entry_time: data.status === 'entered' ? now : null,
+      exit_time: data.status === 'exited' ? now : null,
+    };
+    db.visitors.unshift(visitor);
+    await persist();
+    return ok(visitor);
+  }
+
+  async adminUpdateVisitor(id: number, patch: any) {
+    await delay();
+    const db = await getDb();
+    this.assertAdmin(await currentUser());
+    const idx = db.visitors.findIndex((v) => v.id === Number(id));
+    if (idx === -1) throw new ApiError(404, 'Visitor not found.');
+    const next = { ...patch };
+    delete next.id;
+    if (next.flat) next.flat = String(next.flat).toUpperCase();
+    db.visitors[idx] = { ...db.visitors[idx], ...next };
+    if (next.name) db.visitors[idx].visitor_name = next.name;
+    await persist();
+    return ok(db.visitors[idx]);
+  }
+
+  async adminDeleteVisitor(id: number) {
+    await delay();
+    const db = await getDb();
+    this.assertAdmin(await currentUser());
+    const idx = db.visitors.findIndex((v) => v.id === Number(id));
+    if (idx === -1) throw new ApiError(404, 'Visitor not found.');
+    db.visitors.splice(idx, 1);
+    const pa = db.preApproved.find((p) => p.admitted_visit_id === Number(id));
+    if (pa) {
+      pa.admitted = false;
+      pa.admitted_visit_id = undefined;
+    }
+    await persist();
+    return ok({ detail: 'Visitor deleted', id: Number(id) });
+  }
+
   // ---- Society / flats ---------------------------------------
   /** Flats are derived from registered residents who have set a house number. */
   private flatList(db: MockDB) {

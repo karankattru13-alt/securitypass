@@ -45,6 +45,7 @@ import AdminDashboardScreen from './src/screens/admin/AdminDashboardScreen';
 import AdminSocietyScreen from './src/screens/admin/AdminSocietyScreen';
 import AdminResidentsScreen from './src/screens/admin/AdminResidentsScreen';
 import AdminGuardsScreen from './src/screens/admin/AdminGuardsScreen';
+import AdminVisitorsScreen from './src/screens/admin/AdminVisitorsScreen';
 
 // Common Screens
 import ProfileScreen from './src/screens/common/ProfileScreen';
@@ -185,6 +186,7 @@ const RootNavigator = () => {
           <Stack.Screen name="AdminApp" component={AdminNavigator} />
           <Stack.Screen name="AdminResidents" component={AdminResidentsScreen} />
           <Stack.Screen name="AdminGuards" component={AdminGuardsScreen} />
+          <Stack.Screen name="AdminVisitors" component={AdminVisitorsScreen} />
         </Stack.Group>
       )}
 

@@ -255,6 +255,31 @@ class APIClient {
     return this.client.get('/guards/my-records/');
   }
 
+  // Admin CRUD
+  async adminCreateUser(data: any) {
+    return this.client.post('/admin/users/', data);
+  }
+
+  async adminUpdateUser(id: number, patch: any) {
+    return this.client.patch(`/admin/users/${id}/`, patch);
+  }
+
+  async adminDeleteUser(id: number) {
+    return this.client.delete(`/admin/users/${id}/`);
+  }
+
+  async adminCreateVisitor(data: any) {
+    return this.client.post('/admin/visitors/', data);
+  }
+
+  async adminUpdateVisitor(id: number, patch: any) {
+    return this.client.patch(`/admin/visitors/${id}/`, patch);
+  }
+
+  async adminDeleteVisitor(id: number) {
+    return this.client.delete(`/admin/visitors/${id}/`);
+  }
+
   // Generic error handler
   getErrorMessage(error: any): string {
     if (error.response?.data?.detail) {

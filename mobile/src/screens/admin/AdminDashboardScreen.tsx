@@ -90,6 +90,7 @@ const AdminDashboardScreen: React.FC<any> = ({ navigation }) => {
           <Button
             mode="contained-tonal"
             icon="account-multiple"
+            compact
             onPress={() => navigation.navigate('AdminResidents')}
             style={styles.link}
           >
@@ -98,10 +99,20 @@ const AdminDashboardScreen: React.FC<any> = ({ navigation }) => {
           <Button
             mode="contained-tonal"
             icon="shield-account"
+            compact
             onPress={() => navigation.navigate('AdminGuards')}
             style={styles.link}
           >
             Guards
+          </Button>
+          <Button
+            mode="contained-tonal"
+            icon="account-clock"
+            compact
+            onPress={() => navigation.navigate('AdminVisitors')}
+            style={styles.link}
+          >
+            Visitors
           </Button>
         </View>
 

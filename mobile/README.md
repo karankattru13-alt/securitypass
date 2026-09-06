@@ -46,9 +46,10 @@ Flat number**; only then do they appear in the admin residents list, the guard's
   shows **which guard opened it**; pre-clear expected guests; manage recurring
   pre-approved visitors (validity in days, auto-expires); generate shareable
   **QR gate passes**.
-- **Admin**: society dashboard with an **On duty now** guard list; resident
-  directory with house numbers; **security staff roster** wired to live data
-  with per-guard on-duty toggles.
+- **Admin**: society dashboard with an **On duty now** guard list; full
+  **create / edit / delete** over residents, guards and visitor records
+  (Residents, Security Staff and the new Visitors screen — tap a row to edit,
+  "+" to add). Guards on-duty toggles and derived society/flats views too.
 - **CSV export**: guard History & Records and the admin Residents / Society /
   Staff screens each have an **Export CSV** button (real file download on web;
   share sheet on native).
