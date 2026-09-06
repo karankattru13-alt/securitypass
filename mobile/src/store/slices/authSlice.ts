@@ -103,6 +103,18 @@ export const getMe = createAsyncThunk(
   }
 );
 
+export const updateProfile = createAsyncThunk(
+  'auth/updateProfile',
+  async (data: Partial<User>, { rejectWithValue }) => {
+    try {
+      const response = await api.updateProfile(data);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(api.getErrorMessage(error));
+    }
+  }
+);
+
 export const logout = createAsyncThunk(
   'auth/logout',
   async (_, { rejectWithValue }) => {
@@ -180,6 +192,20 @@ const authSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(getMe.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // Update profile
+      .addCase(updateProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = state.user ? { ...state.user, ...action.payload } : action.payload;
+      })
+      .addCase(updateProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

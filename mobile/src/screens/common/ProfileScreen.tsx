@@ -1,20 +1,43 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Avatar, Card, List, Button, Divider } from 'react-native-paper';
+import {
+  Avatar,
+  Card,
+  List,
+  Button,
+  Divider,
+  Portal,
+  Dialog,
+  TextInput,
+} from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
 import { colors, spacing, roleColor, prettyStatus } from '../../theme';
 import { initials } from '../../utils/format';
 import { AppDispatch, RootState } from '../../store';
-import { logout } from '../../store/slices/authSlice';
+import { logout, updateProfile } from '../../store/slices/authSlice';
 
 const ProfileScreen: React.FC<any> = ({ navigation }) => {
   const dispatch = useDispatch<AppDispatch>();
-  const { user } = useSelector((s: RootState) => s.auth);
+  const { user, loading } = useSelector((s: RootState) => s.auth);
   const unread = useSelector((s: RootState) => s.notification.unreadCount);
+  const [editing, setEditing] = useState(false);
+  const [flatInput, setFlatInput] = useState('');
+
   if (!user) return null;
   const accent = roleColor(user.role);
+  const isResident = user.role === 'resident' || user.role === 'staff';
+
+  const openEdit = () => {
+    setFlatInput(user.flat ?? '');
+    setEditing(true);
+  };
+
+  const saveFlat = async () => {
+    await dispatch(updateProfile({ flat: flatInput.trim().toUpperCase() }));
+    setEditing(false);
+  };
 
   return (
     <Screen padded={false}>
@@ -41,6 +64,18 @@ const ProfileScreen: React.FC<any> = ({ navigation }) => {
         </Card>
 
         <Card style={styles.card}>
+          {isResident && (
+            <>
+              <List.Item
+                title="House / Flat number"
+                description={user.flat ? user.flat : 'Not set — tap to add'}
+                left={(p) => <List.Icon {...p} icon="home-outline" />}
+                right={(p) => <List.Icon {...p} icon="pencil" />}
+                onPress={openEdit}
+              />
+              <Divider />
+            </>
+          )}
           <List.Item
             title="Notifications"
             description={unread ? `${unread} unread` : 'All caught up'}
@@ -74,6 +109,32 @@ const ProfileScreen: React.FC<any> = ({ navigation }) => {
           Sign Out
         </Button>
       </View>
+
+      <Portal>
+        <Dialog visible={editing} onDismiss={() => setEditing(false)}>
+          <Dialog.Title>House / Flat number</Dialog.Title>
+          <Dialog.Content>
+            <TextInput
+              label="e.g. A-1203"
+              value={flatInput}
+              onChangeText={setFlatInput}
+              autoCapitalize="characters"
+              autoFocus
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setEditing(false)}>Cancel</Button>
+            <Button
+              mode="contained"
+              loading={loading}
+              disabled={loading || !flatInput.trim()}
+              onPress={saveFlat}
+            >
+              Save
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
     </Screen>
   );
 };

@@ -7,7 +7,7 @@
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const STORAGE_KEY = 'mock_db_v1';
+const STORAGE_KEY = 'mock_db_v2';
 
 export interface MockUser {
   id: number;
@@ -49,6 +49,8 @@ export interface MockVisitor {
   exit_time?: string | null;
   created_by?: number;
   requested_by?: number;
+  /** Registered resident (user id) this visitor request is addressed to. */
+  resident_id?: number;
 }
 
 export interface MockNotification {
@@ -174,6 +176,28 @@ function seed(): MockDB {
         role: 'society_admin',
         is_phone_verified: true,
       },
+      {
+        id: 4,
+        phone: '9000000004',
+        password: 'password',
+        first_name: 'Amit',
+        last_name: 'Patel',
+        email: 'amit@demo.in',
+        role: 'resident',
+        is_phone_verified: true,
+        flat: 'B-101',
+      },
+      {
+        id: 5,
+        phone: '9000000005',
+        password: 'password',
+        first_name: 'Sneha',
+        last_name: 'Nair',
+        email: 'sneha@demo.in',
+        role: 'resident',
+        is_phone_verified: true,
+        flat: 'C-202',
+      },
     ],
     visitors: [
       {
@@ -187,6 +211,7 @@ function seed(): MockDB {
         approval_status: 'pending',
         flat: 'A-1203',
         resident_name: 'Priya Sharma',
+        resident_id: 2,
         requested_at: iso(-4),
         photo: null,
         created_by: 1,
@@ -218,6 +243,7 @@ function seed(): MockDB {
         approval_status: 'approved',
         flat: 'A-1203',
         resident_name: 'Priya Sharma',
+        resident_id: 2,
         requested_at: iso(-55),
         entry_time: iso(-45),
         vehicle_number: 'KA01CD4567',
@@ -251,6 +277,7 @@ function seed(): MockDB {
         approval_status: 'approved',
         flat: 'A-1203',
         resident_name: 'Priya Sharma',
+        resident_id: 2,
         requested_at: iso(-360),
         entry_time: iso(-330),
         exit_time: iso(-180),

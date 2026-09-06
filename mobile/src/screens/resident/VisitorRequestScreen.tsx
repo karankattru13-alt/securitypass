@@ -58,6 +58,11 @@ const VisitorRequestScreen: React.FC<any> = ({ navigation }) => {
         onBack={() => navigation.goBack()}
       />
       <View style={styles.body}>
+        {!user?.flat && (
+          <HelperText type="error" visible style={styles.blocker}>
+            Add your house / flat number in Profile before pre-clearing visitors.
+          </HelperText>
+        )}
         <Text style={styles.hint}>
           The guard will see this visitor as already approved for {user?.flat ?? 'your flat'}.
         </Text>
@@ -101,7 +106,7 @@ const VisitorRequestScreen: React.FC<any> = ({ navigation }) => {
           mode="contained"
           onPress={submit}
           loading={saving}
-          disabled={saving}
+          disabled={saving || !user?.flat}
           buttonColor={colors.resident}
           style={styles.button}
         >
@@ -114,6 +119,7 @@ const VisitorRequestScreen: React.FC<any> = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   body: { padding: spacing(4) },
+  blocker: { marginBottom: spacing(2) },
   hint: { color: colors.muted, fontSize: 13, marginBottom: spacing(4) },
   segment: { marginBottom: spacing(4) },
   input: { marginBottom: spacing(3), backgroundColor: colors.card },

@@ -11,6 +11,7 @@ interface PendingApproval {
   id: number;
   visitor_name: string;
   flat: string;
+  resident_name?: string;
   requested_at: string;
 }
 
@@ -170,7 +171,7 @@ const GuardHomeScreen: React.FC<any> = ({ navigation }) => {
       {pendingApprovals.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
-            Pending Approvals ({pendingApprovals.length})
+            Awaiting Resident Approval ({pendingApprovals.length})
           </Text>
           {pendingApprovals.map((approval) => (
             <Card
@@ -183,7 +184,9 @@ const GuardHomeScreen: React.FC<any> = ({ navigation }) => {
               <Card.Content style={styles.approvalCardContent}>
                 <View style={styles.approvalInfo}>
                   <Text style={styles.approvalName}>{approval.visitor_name}</Text>
-                  <Text style={styles.approvalFlat}>{approval.flat}</Text>
+                  <Text style={styles.approvalFlat}>
+                    For {approval.resident_name || approval.flat || 'resident'}
+                  </Text>
                   <Text style={styles.approvalTime}>
                     {new Date(approval.requested_at).toLocaleTimeString()}
                   </Text>

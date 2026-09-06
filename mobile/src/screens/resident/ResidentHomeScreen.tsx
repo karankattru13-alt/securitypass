@@ -81,6 +81,18 @@ const ResidentHomeScreen: React.FC<any> = ({ navigation }) => {
         }
       />
       <View style={styles.body}>
+        {!user?.flat && (
+          <Card style={styles.flatPrompt} onPress={() => navigation.navigate('Profile')}>
+            <Card.Content style={styles.flatPromptRow}>
+              <MaterialCommunityIcons name="home-alert" size={24} color={colors.warning} />
+              <Text style={styles.flatPromptText}>
+                Add your house / flat number so guards can send visitor requests to you.
+              </Text>
+              <MaterialCommunityIcons name="chevron-right" size={22} color={colors.muted} />
+            </Card.Content>
+          </Card>
+        )}
+
         <View style={styles.quickRow}>
           {QUICK.map((q) => (
             <TouchableOpacity
@@ -173,6 +185,15 @@ const styles = StyleSheet.create({
     height: 9,
     borderRadius: 5,
     backgroundColor: colors.warning,
+  },
+  flatPrompt: { backgroundColor: '#FFF7ED', marginBottom: spacing(4) },
+  flatPromptRow: { flexDirection: 'row', alignItems: 'center' },
+  flatPromptText: {
+    flex: 1,
+    marginHorizontal: spacing(3),
+    fontSize: 13,
+    color: colors.text,
+    fontWeight: '600',
   },
   quickRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing(5) },
   quick: {

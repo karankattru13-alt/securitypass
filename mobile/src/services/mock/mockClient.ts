@@ -115,7 +115,15 @@ class MockAPIClient {
     const me = await currentUser();
     const now = new Date().toISOString();
     const name = visitorData.name || visitorData.visitor_name || 'Visitor';
-    const createdByResident = me?.role === 'resident';
+    const createdByResident = me?.role === 'resident' || me?.role === 'staff';
+
+    // Resolve the addressed resident: either an explicit resident_id (guard flow)
+    // or, when a resident registers their own expected guest, themselves.
+    const targetResident =
+      (visitorData.resident_id &&
+        db.users.find((u) => u.id === Number(visitorData.resident_id))) ||
+      (createdByResident ? me : undefined);
+
     const visitor: MockVisitor = {
       id: nextId(db),
       name,
@@ -125,8 +133,11 @@ class MockAPIClient {
       type: visitorData.type || 'guest',
       status: createdByResident ? 'approved' : 'waiting',
       approval_status: createdByResident ? 'approved' : 'pending',
-      flat: visitorData.flat || me?.flat || '',
-      resident_name: visitorData.resident_name || (createdByResident ? `${me?.first_name} ${me?.last_name}` : ''),
+      flat: visitorData.flat || targetResident?.flat || me?.flat || '',
+      resident_name: targetResident
+        ? `${targetResident.first_name} ${targetResident.last_name}`
+        : visitorData.resident_name || '',
+      resident_id: targetResident?.id,
       vehicle_number: visitorData.vehicle_number || undefined,
       photo: visitorData.photo || null,
       requested_at: now,
@@ -138,17 +149,38 @@ class MockAPIClient {
     db.visitors.unshift(visitor);
     db.notifications.unshift({
       id: nextId(db),
-      title: createdByResident ? 'Visitor pre-approved' : 'Visitor waiting',
+      title: createdByResident ? 'Visitor pre-approved' : 'Approval needed',
       message: createdByResident
         ? `${name} is expected at ${visitor.flat}.`
-        : `${name} is at the gate for ${visitor.flat}.`,
+        : `${name} is at the gate to meet ${visitor.resident_name || visitor.flat}. Approve or deny?`,
       type: 'visitor_request',
       is_read: false,
       created_at: now,
-      data: { visitorId: visitor.id },
+      data: { visitorId: visitor.id, residentId: visitor.resident_id },
     });
     await persist();
     return ok(visitor);
+  }
+
+  /** Registered residents (used by the guard's "who is this visitor for?" picker
+   *  and by the admin residents directory). */
+  async getResidents() {
+    await delay(140);
+    const db = await getDb();
+    return ok(
+      db.users
+        .filter((u) => u.role === 'resident' || u.role === 'staff')
+        .map((u) => ({
+          id: u.id,
+          name: `${u.first_name} ${u.last_name}`.trim(),
+          first_name: u.first_name,
+          last_name: u.last_name,
+          phone: u.phone,
+          email: u.email,
+          flat: u.flat || '',
+          role: u.role,
+        }))
+    );
   }
 
   async getVisitors(filters: any = {}) {
@@ -157,8 +189,13 @@ class MockAPIClient {
     const me = await currentUser();
     let list = [...db.visitors];
 
-    if (me?.role === 'resident') {
-      list = list.filter((v) => v.flat === me.flat || v.requested_by === me.id);
+    if (me?.role === 'resident' || me?.role === 'staff') {
+      list = list.filter(
+        (v) =>
+          v.resident_id === me.id ||
+          v.requested_by === me.id ||
+          (!!me.flat && v.flat === me.flat)
+      );
     }
     if (filters.status) list = list.filter((v) => v.status === filters.status);
     if (filters.approval_status) {

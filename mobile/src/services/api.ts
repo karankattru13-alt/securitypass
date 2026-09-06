@@ -93,6 +93,10 @@ class APIClient {
     return this.client.post('/users/update_profile/', data);
   }
 
+  async getResidents() {
+    return this.client.get('/users/residents/');
+  }
+
   // Visitor endpoints
   async createVisitor(visitorData: any) {
     return this.client.post('/visitors/', visitorData);
