@@ -51,7 +51,12 @@ const GuardRecordsScreen: React.FC<any> = ({ navigation }) => {
 
   return (
     <Screen padded={false} refreshing={refreshing} onRefresh={load}>
-      <AppHeader title="My Records" color={c.guard} icon="clipboard-text-outline" />
+      <AppHeader
+        title="My Records"
+        color={c.guard}
+        icon="clipboard-text-outline"
+        onBack={() => navigation.navigate('GuardHome')}
+      />
       <View style={styles.body}>
         <SegmentedButtons
           value={tab}

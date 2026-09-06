@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert, Platform } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { List, Card, Divider, Switch, Button, Text } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import Screen from '../../components/Screen';
@@ -9,20 +9,9 @@ import { AppDispatch, RootState } from '../../store';
 import { setTheme } from '../../store/slices/guiSlice';
 import { logout, updateProfile } from '../../store/slices/authSlice';
 import api from '../../services/api';
+import { appConfirm } from '../../components/AppDialog';
 
 type Pal = ReturnType<typeof useAppColors>;
-
-const confirm = (title: string, message: string, onYes: () => void) => {
-  if (Platform.OS === 'web') {
-    // eslint-disable-next-line no-alert
-    if (window.confirm(`${title}\n\n${message}`)) onYes();
-  } else {
-    Alert.alert(title, message, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Confirm', style: 'destructive', onPress: onYes },
-    ]);
-  }
-};
 
 const SettingsScreen: React.FC<any> = ({ navigation }) => {
   const c = useAppColors();
@@ -31,20 +20,23 @@ const SettingsScreen: React.FC<any> = ({ navigation }) => {
   const theme = useSelector((s: RootState) => s.gui.theme);
   const [working, setWorking] = useState(false);
 
-  const resetData = () => {
-    confirm(
-      'Reset demo data',
-      'This restores all visitors, notifications and passes to their seeded state, then signs you out.',
-      async () => {
-        setWorking(true);
-        try {
-          await (api as any).resetData?.();
-        } finally {
-          setWorking(false);
-          dispatch(logout());
-        }
-      }
-    );
+  const resetData = async () => {
+    const ok = await appConfirm({
+      title: 'Reset demo data?',
+      message:
+        'This restores all visitors, notifications and passes to their seeded state, then signs you out.',
+      confirmLabel: 'Reset',
+      tone: 'danger',
+      icon: 'database-refresh-outline',
+    });
+    if (!ok) return;
+    setWorking(true);
+    try {
+      await (api as any).resetData?.();
+    } finally {
+      setWorking(false);
+      dispatch(logout());
+    }
   };
 
   return (

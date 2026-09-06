@@ -10,7 +10,7 @@ import api from '../../services/api';
 
 type Pal = ReturnType<typeof useAppColors>;
 
-const AdminSocietyScreen: React.FC = () => {
+const AdminSocietyScreen: React.FC<any> = ({ navigation }) => {
   const c = useAppColors();
   const styles = React.useMemo(() => makeStyles(c), [c]);
 
@@ -58,7 +58,13 @@ const AdminSocietyScreen: React.FC = () => {
 
   return (
     <Screen padded={false} refreshing={refreshing} onRefresh={load}>
-      <AppHeader title="Society" subtitle={society?.name} color={c.admin} icon="home-city" />
+      <AppHeader
+        title="Society"
+        subtitle={society?.name}
+        color={c.admin}
+        icon="home-city"
+        onBack={() => navigation.navigate('AdminDashboard')}
+      />
       <View style={styles.body}>
         <Card style={styles.card}>
           <Card.Content>

@@ -72,7 +72,12 @@ const GuardHistoryScreen: React.FC<any> = ({ navigation }) => {
 
   return (
     <Screen padded={false} refreshing={refreshing} onRefresh={load}>
-      <AppHeader title="Visitor History" color={c.guard} icon="history" />
+      <AppHeader
+        title="Visitor History"
+        color={c.guard}
+        icon="history"
+        onBack={() => navigation.navigate('GuardHome')}
+      />
       <View style={styles.body}>
         <Searchbar
           placeholder="Search name, flat or phone"

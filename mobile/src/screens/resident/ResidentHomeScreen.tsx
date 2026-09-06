@@ -9,7 +9,7 @@ import AppHeader from '../../components/AppHeader';
 import VisitorCard from '../../components/VisitorCard';
 import EmptyState from '../../components/EmptyState';
 import { useAppColors, spacing, radius } from '../../theme';
-import { timeAgo } from '../../utils/format';
+import { timeAgo, smartDate } from '../../utils/format';
 import { RootState } from '../../store';
 import api from '../../services/api';
 
@@ -28,6 +28,7 @@ const ResidentHomeScreen: React.FC<any> = ({ navigation }) => {
   const unread = useSelector((s: RootState) => s.notification.unreadCount);
   const [pending, setPending] = useState<any[]>([]);
   const [active, setActive] = useState<any[]>([]);
+  const [preApproved, setPreApproved] = useState<any[]>([]);
   const [onDutyGuards, setOnDutyGuards] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -36,9 +37,10 @@ const ResidentHomeScreen: React.FC<any> = ({ navigation }) => {
   const load = useCallback(async () => {
     setRefreshing(true);
     try {
-      const [all, guards] = await Promise.all([
+      const [all, guards, pre] = await Promise.all([
         api.getVisitors(),
         api.getOnDutyGuards(),
+        api.getPreApprovedVisitors(),
       ]);
       setPending(
         all.data.filter(
@@ -49,6 +51,7 @@ const ResidentHomeScreen: React.FC<any> = ({ navigation }) => {
         all.data.filter((v: any) => ['approved', 'entered'].includes(v.status))
       );
       setOnDutyGuards(guards.data);
+      setPreApproved(pre.data.filter((p: any) => p.status !== 'cancelled'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -221,6 +224,65 @@ const ResidentHomeScreen: React.FC<any> = ({ navigation }) => {
             />
           ))
         )}
+
+        <View style={styles.sectionRow}>
+          <Text style={styles.section}>Pre-approved visitors</Text>
+          <Button
+            compact
+            textColor={c.resident}
+            onPress={() => navigation.navigate('PreApprovedVisitors')}
+          >
+            Manage
+          </Button>
+        </View>
+        {preApproved.length === 0 ? (
+          <EmptyState
+            icon="account-check-outline"
+            title="No pre-approved visitors"
+            message="Add recurring guests or house help so the guard can let them in."
+          />
+        ) : (
+          preApproved.slice(0, 4).map((p) => {
+            const expired = p.status === 'expired';
+            return (
+              <Card
+                key={p.id}
+                style={styles.preCard}
+                onPress={() => navigation.navigate('PreApprovedVisitors')}
+              >
+                <Card.Content style={styles.preRow}>
+                  <MaterialCommunityIcons
+                    name="account-check"
+                    size={24}
+                    color={expired ? c.muted : c.resident}
+                  />
+                  <View style={styles.preInfo}>
+                    <Text style={styles.name}>{p.name}</Text>
+                    <Text style={styles.preMeta}>
+                      {p.purpose} · valid {p.days} day{p.days === 1 ? '' : 's'} ·{' '}
+                      {expired ? 'expired' : `until ${smartDate(p.valid_to)}`}
+                    </Text>
+                  </View>
+                  <View
+                    style={[
+                      styles.prePill,
+                      { backgroundColor: expired ? `${c.danger}22` : `${c.success}22` },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.prePillText,
+                        { color: expired ? c.danger : c.success },
+                      ]}
+                    >
+                      {expired ? 'Expired' : 'Active'}
+                    </Text>
+                  </View>
+                </Card.Content>
+              </Card>
+            );
+          })
+        )}
       </View>
     </Screen>
   );
@@ -239,6 +301,18 @@ const makeStyles = (c: Pal) =>
     backgroundColor: c.warning,
   },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: spacing(3) },
+  sectionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing(3),
+  },
+  preCard: { backgroundColor: c.card, marginBottom: spacing(3) },
+  preRow: { flexDirection: 'row', alignItems: 'center' },
+  preInfo: { flex: 1, marginLeft: spacing(3) },
+  preMeta: { fontSize: 12, color: c.muted, marginTop: 2 },
+  prePill: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999 },
+  prePillText: { fontSize: 11, fontWeight: '800' },
   dutyCard: { backgroundColor: c.card, marginBottom: spacing(4), borderWidth: 1, borderColor: c.border },
   dutyRow: { flexDirection: 'row', alignItems: 'center', gap: spacing(2) },
   dutyText: { flex: 1, fontSize: 12.5, color: c.text, fontWeight: '600' },

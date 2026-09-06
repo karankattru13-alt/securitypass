@@ -1,11 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Tooltip } from 'react-native-paper';
 import { useDispatch } from 'react-redux';
 import { useAppColors, spacing } from '../theme';
 import { AppDispatch } from '../store';
 import { logout } from '../store/slices/authSlice';
+import { appConfirm } from './AppDialog';
 
 interface Props {
   title: string;
@@ -19,16 +20,13 @@ interface Props {
 }
 
 export const confirmSignOut = (onYes: () => void) => {
-  const msg = 'Sign out of SocietyPass?';
-  if (Platform.OS === 'web') {
-    // eslint-disable-next-line no-alert
-    if (window.confirm(msg)) onYes();
-  } else {
-    Alert.alert('Sign out', msg, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign out', style: 'destructive', onPress: onYes },
-    ]);
-  }
+  appConfirm({
+    title: 'Sign out?',
+    message: 'You will need to sign in again to use SocietyPass.',
+    confirmLabel: 'Sign out',
+    tone: 'danger',
+    icon: 'logout',
+  }).then((ok) => ok && onYes());
 };
 
 const AppHeader: React.FC<Props> = ({

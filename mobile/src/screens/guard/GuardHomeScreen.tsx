@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, TouchableOpacity, Text, StyleSheet, Alert, Platform } from 'react-native';
+import { View, ScrollView, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Card, Button, ActivityIndicator, Tooltip } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
@@ -8,6 +8,7 @@ import api from '../../services/api';
 import { RootState, AppDispatch } from '../../store';
 import { logout } from '../../store/slices/authSlice';
 import { confirmSignOut } from '../../components/AppHeader';
+import { appAlert } from '../../components/AppDialog';
 import { useAppColors, spacing, radius } from '../../theme';
 import { clockTime, smartDate } from '../../utils/format';
 
@@ -74,9 +75,11 @@ const GuardHomeScreen: React.FC<any> = ({ navigation }) => {
   };
 
   const handleEmergency = () => {
-    const msg = 'This would alert the security supervisor and control room.';
-    if (Platform.OS === 'web') window.alert(`Emergency alert\n\n${msg}`);
-    else Alert.alert('Emergency alert', msg);
+    appAlert(
+      'Emergency alert sent',
+      'The security supervisor and control room have been notified.',
+      'danger'
+    );
   };
 
   const actions = [

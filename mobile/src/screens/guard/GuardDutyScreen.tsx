@@ -21,7 +21,7 @@ const MODES = [
   { value: 'night', label: 'Night Duty', icon: 'weather-night' },
 ];
 
-const GuardDutyScreen: React.FC = () => {
+const GuardDutyScreen: React.FC<any> = ({ navigation }) => {
   const c = useAppColors();
   const styles = React.useMemo(() => makeStyles(c), [c]);
   const dispatch = useDispatch<AppDispatch>();
@@ -79,6 +79,7 @@ const GuardDutyScreen: React.FC = () => {
         subtitle={user?.gate || 'Main Gate'}
         color={c.guard}
         icon="shield-account"
+        onBack={() => navigation.navigate('GuardHome')}
       />
       <View style={styles.body}>
         <Card style={[styles.statusCard, { borderColor: onDuty ? c.success : c.border }]}>

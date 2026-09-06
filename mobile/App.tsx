@@ -12,6 +12,7 @@ import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import store from './src/store';
 import { useThemeBundle, useAppColors } from './src/theme';
 import { useThemeSync } from './src/hooks/useThemeSync';
+import { AppDialogHost } from './src/components/AppDialog';
 import { useAuth } from './src/hooks/useAuth';
 import { useNotifications } from './src/hooks/useNotifications';
 
@@ -72,6 +73,7 @@ const GuardNavigator = () => {
   const c = useAppColors();
   return (
   <Tab.Navigator
+    backBehavior="history"
     screenOptions={tabScreenOptions(c.guard, {
       GuardHome: ['home', 'home-outline'],
       GuardDuty: ['shield-check', 'shield-off-outline'],
@@ -94,6 +96,7 @@ const ResidentNavigator = () => {
   const c = useAppColors();
   return (
   <Tab.Navigator
+    backBehavior="history"
     screenOptions={tabScreenOptions(c.resident, {
       ResidentHome: ['home', 'home-outline'],
       ResidentHistory: ['history', 'history'],
@@ -116,6 +119,7 @@ const AdminNavigator = () => {
   const c = useAppColors();
   return (
   <Tab.Navigator
+    backBehavior="history"
     screenOptions={tabScreenOptions(c.admin, {
       AdminDashboard: ['chart-box', 'chart-box-outline'],
       AdminSociety: ['home-city', 'home-city-outline'],
@@ -201,6 +205,7 @@ const ThemedApp = () => {
       <NavigationContainer theme={nav}>
         <RootNavigator />
       </NavigationContainer>
+      <AppDialogHost />
     </PaperProvider>
   );
 };

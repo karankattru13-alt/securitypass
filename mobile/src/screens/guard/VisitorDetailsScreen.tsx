@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, Image, StyleSheet, Platform, Alert } from 'react-native';
+import { View, Image, StyleSheet } from 'react-native';
 import { Text, Button, ActivityIndicator, Card } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
@@ -9,12 +9,12 @@ import StatusPill from '../../components/StatusPill';
 import { useAppColors, spacing, radius } from '../../theme';
 import { smartDate } from '../../utils/format';
 import api from '../../services/api';
+import { appAlert } from '../../components/AppDialog';
 
 type Pal = ReturnType<typeof useAppColors>;
 
-
-const notify = (msg: string) =>
-  Platform.OS === 'web' ? window.alert(msg) : Alert.alert('SocietyPass', msg);
+const notify = (msg: string, tone: 'default' | 'success' | 'info' = 'success') =>
+  appAlert('Done', msg, tone);
 
 const VisitorDetailsScreen: React.FC<any> = ({ navigation, route }) => {
   const c = useAppColors();

@@ -45,7 +45,12 @@ const ProfileScreen: React.FC<any> = ({ navigation }) => {
 
   return (
     <Screen padded={false}>
-      <AppHeader title="Profile" color={accent} icon="account-circle" />
+      <AppHeader
+        title="Profile"
+        color={accent}
+        icon="account-circle"
+        onBack={navigation.canGoBack() ? () => navigation.goBack() : undefined}
+      />
       <View style={styles.body}>
         <Card style={styles.card}>
           <Card.Content style={styles.userRow}>

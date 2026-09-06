@@ -72,7 +72,12 @@ const ResidentHistoryScreen: React.FC<any> = ({ navigation }) => {
 
   return (
     <Screen padded={false} refreshing={refreshing} onRefresh={load}>
-      <AppHeader title="My Visitors" color={c.resident} icon="history" />
+      <AppHeader
+        title="My Visitors"
+        color={c.resident}
+        icon="history"
+        onBack={() => navigation.navigate('ResidentHome')}
+      />
       <View style={styles.body}>
         <Searchbar
           placeholder="Search name or purpose"
