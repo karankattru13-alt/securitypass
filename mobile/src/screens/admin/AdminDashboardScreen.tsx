@@ -124,25 +124,29 @@ const AdminDashboardScreen: React.FC<any> = ({ navigation }) => {
           <StatTile icon="timer-sand" label="Pending" value={stats.pendingApprovals} tint={c.warning} />
         </View>
 
+        <SectionTitle title="Manage" color={c.admin} />
         <View style={styles.manageRow}>
           <ActionTile
             icon="account-multiple"
             label="Residents"
             color={c.admin}
+            filled
             width="31%"
             onPress={() => navigation.navigate('AdminResidents')}
           />
           <ActionTile
             icon="shield-account"
             label="Guards"
-            color={c.admin}
+            color={c.guard}
+            filled
             width="31%"
             onPress={() => navigation.navigate('AdminGuards')}
           />
           <ActionTile
             icon="account-clock"
             label="Visitors"
-            color={c.admin}
+            color={c.info}
+            filled
             width="31%"
             onPress={() => navigation.navigate('AdminVisitors')}
           />
@@ -207,7 +211,6 @@ const makeStyles = (c: Pal) =>
     manageRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      marginTop: spacing(4),
     },
     card: {
       backgroundColor: c.card,
