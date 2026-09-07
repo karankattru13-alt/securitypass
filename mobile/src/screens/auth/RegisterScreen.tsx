@@ -4,6 +4,7 @@ import { TextInput, Button, HelperText, SegmentedButtons } from 'react-native-pa
 import { useDispatch, useSelector } from 'react-redux';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
+import LabeledInput from '../../components/LabeledInput';
 import SocietyPicker from '../../components/SocietyPicker';
 import { useAppColors, spacing } from '../../theme';
 import { AppDispatch, RootState } from '../../store';
@@ -93,24 +94,21 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
         hideLogout
       />
       <View style={styles.body}>
-        <TextInput
-          mode="outlined"
+        <LabeledInput
           label="First name"
           value={firstName}
           onChangeText={setFirstName}
           disabled={sent}
           style={styles.input}
         />
-        <TextInput
-          mode="outlined"
+        <LabeledInput
           label="Last name"
           value={lastName}
           onChangeText={setLastName}
           disabled={sent}
           style={styles.input}
         />
-        <TextInput
-          mode="outlined"
+        <LabeledInput
           label="Phone number"
           value={phone}
           onChangeText={setPhone}
@@ -131,8 +129,7 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
         ) : (
           <>
             <Text style={styles.sectionLabel}>Your society / building</Text>
-            <TextInput
-              mode="outlined"
+            <LabeledInput
               label="Name *"
               value={sName}
               onChangeText={setSName}
@@ -149,8 +146,7 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
               ]}
               style={styles.segment}
             />
-            <TextInput
-              mode="outlined"
+            <LabeledInput
               label="City"
               value={sCity}
               onChangeText={setSCity}
@@ -158,16 +154,14 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
               autoCapitalize="words"
               style={styles.input}
             />
-            <TextInput
-              mode="outlined"
+            <LabeledInput
               label="Address"
               value={sAddress}
               onChangeText={setSAddress}
               disabled={sent}
               style={styles.input}
             />
-            <TextInput
-              mode="outlined"
+            <LabeledInput
               label="Pincode"
               value={sPincode}
               onChangeText={setSPincode}
@@ -180,8 +174,7 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
 
         {sent && (
           <>
-            <TextInput
-              mode="outlined"
+            <LabeledInput
               label="OTP code"
               value={code}
               onChangeText={setCode}

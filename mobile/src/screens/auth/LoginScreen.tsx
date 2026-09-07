@@ -4,6 +4,7 @@ import { TextInput, Button, HelperText } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import Screen from '../../components/Screen';
+import LabeledInput from '../../components/LabeledInput';
 import { useAppColors, spacing } from '../../theme';
 import { AppDispatch, RootState } from '../../store';
 import { login, clearError } from '../../store/slices/authSlice';
@@ -33,22 +34,21 @@ const LoginScreen: React.FC<any> = ({ navigation }) => {
           <Text style={styles.subtitle}>Sign in to continue</Text>
         </View>
 
-        <TextInput
-          mode="outlined"
+        <LabeledInput
           label="Phone number"
           value={phone}
           onChangeText={setPhone}
           keyboardType="phone-pad"
+          placeholder="10-digit mobile number"
           left={<TextInput.Icon icon="phone" />}
-          style={styles.input}
           maxLength={10}
         />
-        <TextInput
-          mode="outlined"
+        <LabeledInput
           label="Password"
           value={password}
           onChangeText={setPassword}
           secureTextEntry={!showPass}
+          placeholder="Your password"
           left={<TextInput.Icon icon="lock" />}
           right={
             <TextInput.Icon
@@ -56,7 +56,6 @@ const LoginScreen: React.FC<any> = ({ navigation }) => {
               onPress={() => setShowPass((v) => !v)}
             />
           }
-          style={styles.input}
         />
 
         {error ? (

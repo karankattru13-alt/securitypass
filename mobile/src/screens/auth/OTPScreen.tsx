@@ -5,6 +5,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useDispatch, useSelector } from 'react-redux';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
+import LabeledInput from '../../components/LabeledInput';
 import { useAppColors, spacing } from '../../theme';
 import { AppDispatch, RootState } from '../../store';
 import { requestOTP, verifyOTP, clearError } from '../../store/slices/authSlice';
@@ -47,8 +48,7 @@ const OTPScreen: React.FC<any> = ({ navigation, route }) => {
           style={styles.icon}
         />
 
-        <TextInput
-          mode="outlined"
+        <LabeledInput
           label="Phone number"
           value={phone}
           onChangeText={setPhone}
@@ -61,8 +61,7 @@ const OTPScreen: React.FC<any> = ({ navigation, route }) => {
 
         {sent && (
           <>
-            <TextInput
-              mode="outlined"
+            <LabeledInput
               label="OTP code"
               value={code}
               onChangeText={setCode}
