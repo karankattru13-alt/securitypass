@@ -309,6 +309,11 @@ const makeStyles = (c: Pal) =>
       borderColor: c.border,
       padding: spacing(3),
       marginBottom: spacing(5),
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOpacity: 0.07,
+      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 3 },
     },
     dutyLabel: {
       fontSize: 10,

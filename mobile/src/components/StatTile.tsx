@@ -38,6 +38,11 @@ const makeStyles = (c: ReturnType<typeof useAppColors>) =>
       paddingVertical: spacing(3),
       paddingHorizontal: spacing(2),
       alignItems: 'center',
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 3 },
     },
     iconWrap: {
       width: 30,

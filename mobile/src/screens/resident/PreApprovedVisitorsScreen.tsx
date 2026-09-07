@@ -108,12 +108,15 @@ const PreApprovedVisitorsScreen: React.FC<any> = ({ navigation }) => {
       <View style={styles.body}>
         <Button
           mode={showForm ? 'outlined' : 'contained'}
-          icon={showForm ? 'close' : 'plus'}
+          icon={showForm ? 'close' : 'account-plus'}
           buttonColor={showForm ? undefined : c.resident}
+          textColor={showForm ? c.resident : undefined}
           onPress={() => setShowForm((v) => !v)}
           style={styles.toggle}
+          contentStyle={{ height: 46 }}
+          labelStyle={{ fontSize: 14, fontWeight: '800' }}
         >
-          {showForm ? 'Cancel' : 'Add Pre-Approved Visitor'}
+          {showForm ? 'Cancel' : 'Add pre-approved visitor'}
         </Button>
 
         {showForm && (
@@ -253,7 +256,7 @@ const PreApprovedVisitorsScreen: React.FC<any> = ({ navigation }) => {
 const makeStyles = (c: Pal) =>
   StyleSheet.create({
     body: { padding: spacing(4) },
-    toggle: { marginBottom: spacing(4) },
+    toggle: { marginBottom: spacing(4), borderRadius: 999 },
     formCard: { backgroundColor: c.card, marginBottom: spacing(4) },
     input: { marginBottom: spacing(3), backgroundColor: c.card },
     card: { backgroundColor: c.card, marginBottom: spacing(3) },

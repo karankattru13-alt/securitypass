@@ -2,8 +2,9 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Tooltip } from 'react-native-paper';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useDispatch } from 'react-redux';
-import { useAppColors, spacing } from '../theme';
+import { useAppColors, spacing, gradientFor } from '../theme';
 import { AppDispatch } from '../store';
 import { logout } from '../store/slices/authSlice';
 import { appConfirm } from './AppDialog';
@@ -43,7 +44,15 @@ const AppHeader: React.FC<Props> = ({
   const bg = color ?? c.primary;
 
   return (
-    <View style={[styles.header, { backgroundColor: bg }]}>
+    <LinearGradient
+      colors={gradientFor(bg)}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.header}
+    >
+      {/* subtle decorative circle */}
+      <View pointerEvents="none" style={styles.blob} />
+
       {onBack ? (
         <Tooltip title="Back">
           <TouchableOpacity onPress={onBack} style={styles.backBtn} hitSlop={12}>
@@ -55,7 +64,7 @@ const AppHeader: React.FC<Props> = ({
         <Text style={styles.title}>{title}</Text>
         {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
       </View>
-      {right ?? (icon ? <MaterialCommunityIcons name={icon} size={28} color="#fff" /> : null)}
+      {right ?? (icon ? <MaterialCommunityIcons name={icon} size={26} color="#fff" /> : null)}
       {!hideLogout ? (
         <Tooltip title="Sign out">
           <TouchableOpacity
@@ -68,28 +77,39 @@ const AppHeader: React.FC<Props> = ({
           </TouchableOpacity>
         </Tooltip>
       ) : null}
-    </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   header: {
     paddingHorizontal: spacing(4),
-    paddingVertical: spacing(4),
+    paddingTop: spacing(5),
+    paddingBottom: spacing(5),
     flexDirection: 'row',
     alignItems: 'center',
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    elevation: 4,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    overflow: 'hidden',
+    elevation: 6,
     shadowColor: '#000',
-    shadowOpacity: 0.18,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 5 },
+  },
+  blob: {
+    position: 'absolute',
+    right: -40,
+    top: -60,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: 'rgba(255,255,255,0.08)',
   },
   backBtn: { marginRight: spacing(3) },
   textWrap: { flex: 1 },
-  title: { fontSize: 20, fontWeight: '700', color: '#fff' },
-  subtitle: { fontSize: 13, color: 'rgba(255,255,255,0.85)', marginTop: 2 },
+  title: { fontSize: 20, fontWeight: '800', color: '#fff', letterSpacing: 0.2 },
+  subtitle: { fontSize: 13, color: 'rgba(255,255,255,0.9)', marginTop: 2 },
   logoutBtn: {
     marginLeft: spacing(3),
     borderLeftWidth: StyleSheet.hairlineWidth,

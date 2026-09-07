@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Button, ActivityIndicator, Tooltip } from 'react-native-paper';
 import { MaterialCommunityIcons as Icon } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 import api from '../../services/api';
 import { RootState, AppDispatch } from '../../store';
 import { logout } from '../../store/slices/authSlice';
@@ -14,7 +15,7 @@ import DecisionButtons from '../../components/DecisionButtons';
 import SectionTitle from '../../components/SectionTitle';
 import StatTile from '../../components/StatTile';
 import ActionTile from '../../components/ActionTile';
-import { useAppColors, spacing, radius } from '../../theme';
+import { useAppColors, spacing, radius, gradientFor } from '../../theme';
 import { clockTime, smartDate } from '../../utils/format';
 
 type Pal = ReturnType<typeof useAppColors>;
@@ -127,7 +128,13 @@ const GuardHomeScreen: React.FC<any> = ({ navigation }) => {
   return (
     <ScrollView style={styles.fill} contentContainerStyle={styles.scroll}>
       <View style={styles.wrap}>
-        <View style={styles.header}>
+        <LinearGradient
+          colors={gradientFor(c.guard)}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.header}
+        >
+          <View pointerEvents="none" style={styles.headerBlob} />
           <View style={{ flex: 1 }}>
             <Text style={styles.hLabel}>SIGNED IN</Text>
             <Text style={styles.hTitle}>
@@ -162,7 +169,7 @@ const GuardHomeScreen: React.FC<any> = ({ navigation }) => {
               <Icon name="logout" size={22} color="#fff" />
             </TouchableOpacity>
           </Tooltip>
-        </View>
+        </LinearGradient>
 
         <View style={styles.pad}>
           <View style={styles.row}>
@@ -303,19 +310,28 @@ const makeStyles = (c: Pal) =>
     scroll: { paddingBottom: spacing(10) },
     wrap: { width: '100%', maxWidth: 720, alignSelf: 'center' },
     header: {
-      backgroundColor: c.guard,
       paddingHorizontal: spacing(4),
       paddingTop: spacing(5),
-      paddingBottom: spacing(5),
+      paddingBottom: spacing(6),
       flexDirection: 'row',
       alignItems: 'flex-start',
-      borderBottomLeftRadius: 24,
-      borderBottomRightRadius: 24,
-      elevation: 4,
+      borderBottomLeftRadius: 26,
+      borderBottomRightRadius: 26,
+      overflow: 'hidden',
+      elevation: 6,
       shadowColor: '#000',
-      shadowOpacity: 0.18,
-      shadowRadius: 10,
-      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 5 },
+    },
+    headerBlob: {
+      position: 'absolute',
+      right: -50,
+      top: -70,
+      width: 180,
+      height: 180,
+      borderRadius: 90,
+      backgroundColor: 'rgba(255,255,255,0.08)',
     },
     hLabel: {
       fontSize: 10,
@@ -342,8 +358,8 @@ const makeStyles = (c: Pal) =>
       borderLeftWidth: StyleSheet.hairlineWidth,
       borderLeftColor: 'rgba(255,255,255,0.4)',
     },
-    pad: { padding: spacing(4) },
-    row: { flexDirection: 'row', gap: spacing(3) },
+    pad: { paddingHorizontal: spacing(4), paddingBottom: spacing(4) },
+    row: { flexDirection: 'row', gap: spacing(3), marginTop: -spacing(7) },
     grid: {
       flexDirection: 'row',
       flexWrap: 'wrap',

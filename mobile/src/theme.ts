@@ -76,7 +76,29 @@ export const useAppColors = (): Palette => {
 /** 4px spacing scale: spacing(2) === 8 */
 export const spacing = (n: number) => n * 4;
 
-export const radius = { sm: 8, md: 12, lg: 16, pill: 999 };
+export const radius = { sm: 8, md: 12, lg: 16, xl: 22, pill: 999 };
+
+/** Lighten (amt > 0) or darken (amt < 0) a hex colour. amt in [-1, 1]. */
+export const shade = (hex: string, amt: number) => {
+  const h = hex.replace('#', '');
+  const full = h.length === 3 ? h.split('').map((x) => x + x).join('') : h;
+  const num = parseInt(full, 16);
+  let r = (num >> 16) & 255;
+  let g = (num >> 8) & 255;
+  let b = num & 255;
+  const target = amt < 0 ? 0 : 255;
+  const p = Math.min(1, Math.abs(amt));
+  r = Math.round((target - r) * p) + r;
+  g = Math.round((target - g) * p) + g;
+  b = Math.round((target - b) * p) + b;
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+};
+
+/** Two-stop gradient derived from a base colour, for headers / tiles / buttons. */
+export const gradientFor = (color: string): [string, string] => [
+  shade(color, 0.1),
+  shade(color, -0.24),
+];
 
 export const roleColor = (role?: string, c: Palette = lightColors) => {
   switch (role) {
