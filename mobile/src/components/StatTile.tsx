@@ -38,6 +38,7 @@ const makeStyles = (c: ReturnType<typeof useAppColors>) =>
       paddingVertical: spacing(3),
       paddingHorizontal: spacing(2),
       alignItems: 'center',
+      justifyContent: 'center',
       elevation: 2,
       shadowColor: '#000',
       shadowOpacity: 0.08,
@@ -45,14 +46,14 @@ const makeStyles = (c: ReturnType<typeof useAppColors>) =>
       shadowOffset: { width: 0, height: 3 },
     },
     iconWrap: {
-      width: 30,
-      height: 30,
+      width: 28,
+      height: 28,
       borderRadius: radius.pill,
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: spacing(2),
     },
-    value: { fontSize: 20, fontWeight: '800', color: c.text },
+    value: { fontSize: 19, fontWeight: '800', color: c.text, lineHeight: 22 },
     label: { fontSize: 11, color: c.muted, marginTop: 2, fontWeight: '600' },
   });
 

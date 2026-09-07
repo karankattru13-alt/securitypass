@@ -69,7 +69,7 @@ const ActionTile: React.FC<Props> = ({
 const makeStyles = (c: ReturnType<typeof useAppColors>) =>
   StyleSheet.create({
     tile: {
-      minHeight: 88,
+      minHeight: 76,
       borderRadius: radius.lg,
       paddingVertical: spacing(3),
       paddingHorizontal: spacing(3),
