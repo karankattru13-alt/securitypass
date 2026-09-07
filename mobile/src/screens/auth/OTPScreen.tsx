@@ -48,6 +48,7 @@ const OTPScreen: React.FC<any> = ({ navigation, route }) => {
         />
 
         <TextInput
+          mode="outlined"
           label="Phone number"
           value={phone}
           onChangeText={setPhone}
@@ -61,6 +62,7 @@ const OTPScreen: React.FC<any> = ({ navigation, route }) => {
         {sent && (
           <>
             <TextInput
+              mode="outlined"
               label="OTP code"
               value={code}
               onChangeText={setCode}

@@ -34,6 +34,7 @@ const LoginScreen: React.FC<any> = ({ navigation }) => {
         </View>
 
         <TextInput
+          mode="outlined"
           label="Phone number"
           value={phone}
           onChangeText={setPhone}
@@ -43,6 +44,7 @@ const LoginScreen: React.FC<any> = ({ navigation }) => {
           maxLength={10}
         />
         <TextInput
+          mode="outlined"
           label="Password"
           value={password}
           onChangeText={setPassword}

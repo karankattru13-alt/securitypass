@@ -94,6 +94,7 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
       />
       <View style={styles.body}>
         <TextInput
+          mode="outlined"
           label="First name"
           value={firstName}
           onChangeText={setFirstName}
@@ -101,6 +102,7 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
           style={styles.input}
         />
         <TextInput
+          mode="outlined"
           label="Last name"
           value={lastName}
           onChangeText={setLastName}
@@ -108,6 +110,7 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
           style={styles.input}
         />
         <TextInput
+          mode="outlined"
           label="Phone number"
           value={phone}
           onChangeText={setPhone}
@@ -129,6 +132,7 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
           <>
             <Text style={styles.sectionLabel}>Your society / building</Text>
             <TextInput
+              mode="outlined"
               label="Name *"
               value={sName}
               onChangeText={setSName}
@@ -146,6 +150,7 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
               style={styles.segment}
             />
             <TextInput
+              mode="outlined"
               label="City"
               value={sCity}
               onChangeText={setSCity}
@@ -154,6 +159,7 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
               style={styles.input}
             />
             <TextInput
+              mode="outlined"
               label="Address"
               value={sAddress}
               onChangeText={setSAddress}
@@ -161,6 +167,7 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
               style={styles.input}
             />
             <TextInput
+              mode="outlined"
               label="Pincode"
               value={sPincode}
               onChangeText={setSPincode}
@@ -174,6 +181,7 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
         {sent && (
           <>
             <TextInput
+              mode="outlined"
               label="OTP code"
               value={code}
               onChangeText={setCode}
