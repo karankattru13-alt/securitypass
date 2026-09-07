@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Card, ActivityIndicator, Button } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSelector } from 'react-redux';
@@ -9,26 +9,18 @@ import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
 import VisitorCard from '../../components/VisitorCard';
 import SocietySelect from '../../components/SocietySelect';
+import SectionTitle from '../../components/SectionTitle';
+import StatTile from '../../components/StatTile';
+import ActionTile from '../../components/ActionTile';
 import { useAppColors, spacing, radius } from '../../theme';
 import api from '../../services/api';
 
 type Pal = ReturnType<typeof useAppColors>;
 
-
 const AdminDashboardScreen: React.FC<any> = ({ navigation }) => {
   const c = useAppColors();
   const styles = React.useMemo(() => makeStyles(c), [c]);
   const user = useSelector((s: RootState) => s.auth.user);
-
-  const Stat = ({ icon, label, value, tint }: any) => (
-    <Card style={styles.statCard}>
-      <Card.Content style={styles.statInner}>
-        <MaterialCommunityIcons name={icon} size={26} color={tint} />
-        <Text style={styles.statValue}>{value}</Text>
-        <Text style={styles.statLabel}>{label}</Text>
-      </Card.Content>
-    </Card>
-  );
 
   const [society, setSociety] = useState<any>(null);
   const [societyCount, setSocietyCount] = useState(0);
@@ -90,16 +82,20 @@ const AdminDashboardScreen: React.FC<any> = ({ navigation }) => {
       />
       <View style={styles.body}>
         {societyCount === 0 ? (
-          <Card style={styles.setupCard} onPress={() => navigation.navigate('AdminSociety')}>
-            <Card.Content style={styles.setupRow}>
-              <MaterialCommunityIcons name="office-building-outline" size={26} color={c.admin} />
-              <Text style={styles.setupText}>
-                Add your society or building to get started — guards and residents
-                will pick it when they sign in.
-              </Text>
-              <MaterialCommunityIcons name="chevron-right" size={22} color={c.muted} />
-            </Card.Content>
-          </Card>
+          <TouchableOpacity
+            style={styles.setupCard}
+            onPress={() => navigation.navigate('AdminSociety')}
+            activeOpacity={0.85}
+          >
+            <View style={[styles.setupIcon, { backgroundColor: `${c.admin}22` }]}>
+              <MaterialCommunityIcons name="office-building-outline" size={20} color={c.admin} />
+            </View>
+            <Text style={styles.setupText}>
+              Add your society or building to get started — guards and residents
+              pick it when they sign in.
+            </Text>
+            <MaterialCommunityIcons name="chevron-right" size={22} color={c.muted} />
+          </TouchableOpacity>
         ) : (
           <Card style={styles.societyCard}>
             <Card.Content>
@@ -109,6 +105,7 @@ const AdminDashboardScreen: React.FC<any> = ({ navigation }) => {
                 icon="cog-outline"
                 textColor={c.admin}
                 onPress={() => navigation.navigate('AdminSociety')}
+                style={{ alignSelf: 'flex-start' }}
               >
                 Manage societies &amp; buildings ({societyCount})
               </Button>
@@ -116,71 +113,66 @@ const AdminDashboardScreen: React.FC<any> = ({ navigation }) => {
           </Card>
         )}
 
-        <View style={styles.statGrid}>
-          <Stat icon="account-group" label="Residents" value={society?.total_residents} tint={c.admin} />
-          <Stat icon="home-city" label="Flats" value={society?.total_flats} tint={c.admin} />
-          <Stat icon="shield-account" label="Guards" value={society?.total_guards} tint={c.admin} />
+        <View style={styles.row}>
+          <StatTile icon="account-group" label="Residents" value={society?.total_residents} tint={c.admin} />
+          <StatTile icon="home-city" label="Flats" value={society?.total_flats} tint={c.admin} />
+          <StatTile icon="shield-account" label="Guards" value={society?.total_guards} tint={c.admin} />
         </View>
-        <View style={styles.statGrid}>
-          <Stat icon="account-clock" label="Today" value={stats.todayVisitors} tint={c.info} />
-          <Stat icon="login-variant" label="Inside" value={stats.currentlyInside} tint={c.success} />
-          <Stat icon="timer-sand" label="Pending" value={stats.pendingApprovals} tint={c.warning} />
+        <View style={[styles.row, { marginTop: spacing(3) }]}>
+          <StatTile icon="account-clock" label="Today" value={stats.todayVisitors} tint={c.info} />
+          <StatTile icon="login-variant" label="Inside" value={stats.currentlyInside} tint={c.success} />
+          <StatTile icon="timer-sand" label="Pending" value={stats.pendingApprovals} tint={c.warning} />
         </View>
 
-        <View style={styles.linkRow}>
-          <Button
-            mode="contained-tonal"
+        <View style={styles.manageRow}>
+          <ActionTile
             icon="account-multiple"
-            compact
+            label="Residents"
+            color={c.admin}
+            width="31%"
             onPress={() => navigation.navigate('AdminResidents')}
-            style={styles.link}
-          >
-            Residents
-          </Button>
-          <Button
-            mode="contained-tonal"
+          />
+          <ActionTile
             icon="shield-account"
-            compact
+            label="Guards"
+            color={c.admin}
+            width="31%"
             onPress={() => navigation.navigate('AdminGuards')}
-            style={styles.link}
-          >
-            Guards
-          </Button>
-          <Button
-            mode="contained-tonal"
+          />
+          <ActionTile
             icon="account-clock"
-            compact
+            label="Visitors"
+            color={c.admin}
+            width="31%"
             onPress={() => navigation.navigate('AdminVisitors')}
-            style={styles.link}
-          >
-            Visitors
-          </Button>
+          />
         </View>
 
-        <Text style={styles.section}>On duty now ({onDutyGuards.length})</Text>
-        <Card style={styles.dutyCard}>
+        <SectionTitle title="On duty now" count={onDutyGuards.length} color={c.admin} />
+        <Card style={styles.card}>
           <Card.Content>
             {onDutyGuards.length === 0 ? (
-              <Text style={styles.dutyEmpty}>No guard is currently on duty.</Text>
+              <Text style={styles.empty}>No guard is currently on duty.</Text>
             ) : (
               onDutyGuards.map((g, i) => (
-                <View
-                  key={g.id}
-                  style={[styles.dutyRow, i > 0 && styles.dutyRowBorder]}
-                >
-                  <MaterialCommunityIcons name="shield-check" size={18} color={c.success} />
+                <View key={g.id} style={[styles.dutyRow, i > 0 && styles.dutyRowBorder]}>
+                  <MaterialCommunityIcons name="shield-check" size={16} color={c.success} />
                   <Text style={styles.dutyName}>{g.name}</Text>
-                  <Text style={styles.dutyGate}>{g.gate}</Text>
+                  <Text style={styles.dutyGate}>
+                    {g.gate} · {g.shift}
+                  </Text>
                 </View>
               ))
             )}
           </Card.Content>
         </Card>
 
-        <Text style={styles.section}>Recent activity</Text>
-        {recent.map((v) => (
-          <VisitorCard key={v.id} visitor={v} />
-        ))}
+        <SectionTitle title="Recent activity" color={c.admin} />
+        {recent.length === 0 ? (
+          <Text style={styles.empty}>No visitor activity yet.</Text>
+        ) : (
+          recent.map((v) => <VisitorCard key={v.id} visitor={v} />)
+        )}
       </View>
     </Screen>
   );
@@ -188,31 +180,51 @@ const AdminDashboardScreen: React.FC<any> = ({ navigation }) => {
 
 const makeStyles = (c: Pal) =>
   StyleSheet.create({
-  body: { padding: spacing(4) },
-  setupCard: { backgroundColor: c.cardAlt, marginBottom: spacing(4) },
-  setupRow: { flexDirection: 'row', alignItems: 'center', gap: spacing(3) },
-  setupText: { flex: 1, fontSize: 13, color: c.text, fontWeight: '600' },
-  societyCard: { backgroundColor: c.card, marginBottom: spacing(4) },
-  statGrid: { flexDirection: 'row', gap: spacing(2), marginBottom: spacing(3) },
-  statCard: { flex: 1, backgroundColor: c.card },
-  statInner: { alignItems: 'center' },
-  statValue: { fontSize: 22, fontWeight: '800', color: c.text, marginTop: spacing(1) },
-  statLabel: { fontSize: 11, color: c.muted, marginTop: 2 },
-  linkRow: { flexDirection: 'row', gap: spacing(3), marginVertical: spacing(3) },
-  link: { flex: 1, borderRadius: radius.sm },
-  dutyCard: { backgroundColor: c.card },
-  dutyEmpty: { color: c.muted, fontSize: 13 },
-  dutyRow: { flexDirection: 'row', alignItems: 'center', gap: spacing(2), paddingVertical: spacing(2) },
-  dutyRowBorder: { borderTopWidth: 1, borderTopColor: c.border },
-  dutyName: { flex: 1, fontSize: 14, fontWeight: '700', color: c.text },
-  dutyGate: { fontSize: 12, color: c.muted },
-  section: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: c.text,
-    marginTop: spacing(3),
-    marginBottom: spacing(3),
-  },
-});
+    body: { padding: spacing(4) },
+    setupCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing(3),
+      backgroundColor: c.cardAlt,
+      borderRadius: radius.lg,
+      padding: spacing(3),
+      marginBottom: spacing(4),
+    },
+    setupIcon: {
+      width: 34,
+      height: 34,
+      borderRadius: radius.pill,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    setupText: { flex: 1, fontSize: 13, color: c.text, fontWeight: '600' },
+    societyCard: {
+      backgroundColor: c.card,
+      marginBottom: spacing(4),
+      borderRadius: radius.lg,
+    },
+    row: { flexDirection: 'row', gap: spacing(3) },
+    manageRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: spacing(4),
+    },
+    card: {
+      backgroundColor: c.card,
+      borderRadius: radius.lg,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.border,
+    },
+    empty: { color: c.muted, fontSize: 13 },
+    dutyRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: spacing(2),
+      paddingVertical: spacing(2),
+    },
+    dutyRowBorder: { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: c.border },
+    dutyName: { flex: 1, fontSize: 14, fontWeight: '700', color: c.text },
+    dutyGate: { fontSize: 12, color: c.muted },
+  });
 
 export default AdminDashboardScreen;
