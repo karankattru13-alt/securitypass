@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { TextInput, Button, HelperText, SegmentedButtons } from 'react-native-paper';
+import { Button, HelperText, SegmentedButtons } from 'react-native-paper';
 import { useDispatch, useSelector } from 'react-redux';
 import Screen from '../../components/Screen';
 import AppHeader from '../../components/AppHeader';
@@ -94,28 +94,27 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
         hideLogout
       />
       <View style={styles.body}>
+       <View style={styles.card}>
         <LabeledInput
           label="First name"
           value={firstName}
           onChangeText={setFirstName}
           disabled={sent}
-          style={styles.input}
         />
         <LabeledInput
           label="Last name"
           value={lastName}
           onChangeText={setLastName}
           disabled={sent}
-          style={styles.input}
         />
         <LabeledInput
           label="Phone number"
           value={phone}
+          icon="phone-outline"
           onChangeText={setPhone}
           keyboardType="phone-pad"
           maxLength={10}
           disabled={sent}
-          style={styles.input}
         />
 
         {!isAdmin ? (
@@ -135,7 +134,6 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
               onChangeText={setSName}
               disabled={sent}
               autoCapitalize="words"
-              style={styles.input}
             />
             <SegmentedButtons
               value={sType}
@@ -152,14 +150,12 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
               onChangeText={setSCity}
               disabled={sent}
               autoCapitalize="words"
-              style={styles.input}
             />
             <LabeledInput
               label="Address"
               value={sAddress}
               onChangeText={setSAddress}
               disabled={sent}
-              style={styles.input}
             />
             <LabeledInput
               label="Pincode"
@@ -167,7 +163,6 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
               onChangeText={setSPincode}
               keyboardType="number-pad"
               disabled={sent}
-              style={styles.input}
             />
           </>
         )}
@@ -177,12 +172,13 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
             <LabeledInput
               label="OTP code"
               value={code}
+              icon="numeric"
+              hint="Demo code: 123456"
+              autoFocus
               onChangeText={setCode}
               keyboardType="number-pad"
               maxLength={6}
-              style={styles.input}
             />
-            <Text style={styles.hint}>Demo code: 123456</Text>
           </>
         )}
 
@@ -219,6 +215,7 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
               : 'Verify & Create Account'}
           </Button>
         )}
+       </View>
       </View>
     </Screen>
   );
@@ -227,17 +224,26 @@ const RegisterScreen: React.FC<any> = ({ navigation, route }) => {
 const makeStyles = (c: Pal) =>
   StyleSheet.create({
     body: { padding: spacing(4) },
-    input: { marginBottom: spacing(3), backgroundColor: c.card },
-    segment: { marginBottom: spacing(3) },
+    card: {
+      backgroundColor: c.card,
+      borderRadius: 16,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: c.border,
+      padding: spacing(5),
+    },
+    segment: { marginBottom: spacing(4), marginTop: -spacing(1) },
     sectionLabel: {
-      fontSize: 13,
+      fontSize: 12.5,
       fontWeight: '800',
       color: c.text,
-      marginBottom: spacing(2),
+      marginBottom: spacing(3),
       marginTop: spacing(1),
+      letterSpacing: 0.3,
     },
-    hint: { color: c.muted, fontSize: 12, marginBottom: spacing(2) },
-    button: { marginTop: spacing(2), paddingVertical: spacing(1) },
+    button: {
+      marginTop: spacing(3),
+      borderRadius: 999,
+    },
   });
 
 export default RegisterScreen;
